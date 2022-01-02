@@ -15,6 +15,7 @@ class guidesLoginStatus(Resource):
         pin = int(args['pin'])
 
         print(args)
+        print(data)
 
         for user in data:
             if username == user[2] and pin == user[1]:
