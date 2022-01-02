@@ -1,5 +1,4 @@
 from flask import Flask
-from flask.helpers import get_root_path
 from flask_restful import Api
 from typing import Any, Dict
 import argparse
