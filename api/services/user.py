@@ -27,4 +27,4 @@ class userFromPIN(Resource):
                 }, 200
         
         # Unknown user. sucks to suck :shrug:
-        return {'status': '0'}, 204
+        return {'status': '0'}, 205
