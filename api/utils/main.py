@@ -6,7 +6,7 @@ import argparse
 #import the services
 from api.services.login import guidesLoginStatus
 from api.services.user import userFromPIN
-from api.services.news import getAllNews
+from api.services.news import getAllNews, getLatestNews
 
 app = Flask(__name__)
 api = Api(app)
@@ -16,6 +16,7 @@ config: Dict[str, Any] = {}
 api.add_resource(guidesLoginStatus, '/guidelogin')
 api.add_resource(userFromPIN, '/userfrompin')
 api.add_resource(getAllNews, '/getallnews')
+api.add_resource(getLatestNews, '/getlatestnews')
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
