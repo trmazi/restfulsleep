@@ -12,10 +12,9 @@ class guidesLoginStatus(Resource):
 
         args = parser.parse_args()
         username = str(args['username'])
-        pin = int(args['pin'])
+        pin = str(args['pin'])
 
         print(args)
-        print(data)
 
         for user in data:
             if username == user[2] and pin == user[1]:
