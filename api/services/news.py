@@ -1,4 +1,4 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from datetime import datetime
 
 from api.data.mysql import MySQLBase
