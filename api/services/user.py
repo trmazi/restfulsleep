@@ -27,4 +27,4 @@ class userFromPIN(Resource):
                 }, 200
         
         # Unknown user. sucks to suck :shrug:
-        return {}, 200
+        return 204

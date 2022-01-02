@@ -19,4 +19,4 @@ class guidesLoginStatus(Resource):
                 return {'status': '1'}, 200
         
         #User not found.
-        return {'status': '0'}, 200
+        return 204
