@@ -18,7 +18,7 @@ class guidesLoginStatus(Resource):
 
         for user in data:
             if username == user[2] and pin == user[1]:
-                return {'status', '1'}, 200
+                return {'status': '1'}, 200
         
         #User not found.
-        return {'status', '0'}, 200
+        return {'status': '0'}, 200
