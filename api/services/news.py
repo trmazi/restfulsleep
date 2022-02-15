@@ -21,7 +21,7 @@ class getLatestNews(Resource):
         for news in data:
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3]}
+            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', '')}
             dicts.append(v)
         return {
             'news':dicts
