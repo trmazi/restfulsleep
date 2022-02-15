@@ -12,9 +12,7 @@ class getAllNews(Resource):
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
             v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3]}
             dicts.append(v)
-        return {
-            'news':dicts
-        }, 200
+        return dicts, 200
 
 class getLatestNews(Resource):
     def get(self):
