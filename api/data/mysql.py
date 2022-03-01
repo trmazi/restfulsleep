@@ -21,9 +21,9 @@ class MySQLBase():
 
     def putUserDiscordData(userid: int, discorddata: dict):
         data = {
-            'discorddata': discorddata
+            "discorddata": discorddata
         }
 
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'UPDATE user SET data = {str(data)} WHERE id = {userid}')
+        cursor.execute(f'UPDATE user SET data = {data} WHERE id = {userid}')
         return None

@@ -57,11 +57,11 @@ class linkDiscordToUser(Resource):
             refresh_token = jsonstat['refresh_token']
 
             discord_info = {
-                'id': user_json['id'],
-                'username': user_json['username'] + "#" + user_json['discriminator'],
-                'avatar': user_json['avatar'],
-                'expires_in': expires_in,
-                'refresh_token': refresh_token,
+                "id": user_json['id'],
+                "username": user_json['username'] + "#" + user_json['discriminator'],
+                "avatar": user_json['avatar'],
+                "expires_in": expires_in,
+                "refresh_token": refresh_token,
             }
 
             MySQLBase.putUserDiscordData(user_id, discord_info)
