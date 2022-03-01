@@ -21,10 +21,9 @@ class MySQLBase():
 
     def putUserDiscordData(userid: int, discorddata: dict):
         userdata = MySQLBase.getUser(userid)
-        print(userdata)
-        username = userdata['username']
-        email = userdata['email']
-        admin = userdata['admin']
+        username = userdata[0]
+        email = userdata[1]
+        admin = userdata[2]
 
         data = {
             "discorddata": discorddata
