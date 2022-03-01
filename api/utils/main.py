@@ -4,9 +4,9 @@ from typing import Any, Dict
 import argparse
 
 #import the services
-#from api.services.login import guidesLoginStatus
-#from api.services.user import userFromPIN
-#from api.services.news import getAllNews, getLatestNews
+from api.services.login import guidesLoginStatus
+from api.services.user import userFromPIN
+from api.services.news import getAllNews, getLatestNews
 from api.services.discord import linkDiscordToUser
 
 app = Flask(__name__)
@@ -14,10 +14,10 @@ api = Api(app)
 config: Dict[str, Any] = {}
 
 #add services
-#api.add_resource(guidesLoginStatus, '/guidelogin')
-#api.add_resource(userFromPIN, '/userfrompin')
-#api.add_resource(getAllNews, '/getallnews')
-#api.add_resource(getLatestNews, '/getlatestnews')
+api.add_resource(guidesLoginStatus, '/guidelogin')
+api.add_resource(userFromPIN, '/userfrompin')
+api.add_resource(getAllNews, '/getallnews')
+api.add_resource(getLatestNews, '/getlatestnews')
 api.add_resource(linkDiscordToUser, '/discordauth')
 
 def main() -> None:
