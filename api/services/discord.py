@@ -28,7 +28,7 @@ class linkDiscordToUser(Resource):
                 'client_secret': "0-cVg17SZRpFdX1lKvMWQRqI2us_ofuW",
                 'code': code,
                 'grant_type': 'authorization_code',
-                'redirect_uri': 'http://127.0.0.1:8000/discordauth?user_id=1',
+                'redirect_uri': 'https://restfulsleep.phaseii.network/discordauth?user_id=1',
                 'scope': 'identify',
             },
             headers={
