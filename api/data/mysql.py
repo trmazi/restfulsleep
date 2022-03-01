@@ -1,4 +1,5 @@
 import mysql.connector
+import json
 
 class MySQLBase():
     connection = mysql.connector.connect(
@@ -29,6 +30,8 @@ class MySQLBase():
             "discorddata": discorddata
         }
 
+        data = json.dumps(data)
+
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin}, data = {discorddata} WHERE id = {userid}')
+        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin}, data = {data} WHERE id = {userid}')
         return None
