@@ -20,10 +20,15 @@ class MySQLBase():
         return cursor.fetchone()
 
     def putUserDiscordData(userid: int, discorddata: dict):
+        userdata = MySQLBase.getUser(userid)
+        username = userdata['username']
+        email = userdata['email']
+        admin = userdata['admin']
+
         data = {
             "discorddata": discorddata
         }
 
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'UPDATE user SET data = {data} WHERE id = {userid}')
+        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin}, data = {data} WHERE id = {userid}')
         return None
