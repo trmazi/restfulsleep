@@ -21,7 +21,7 @@ class MySQLBase():
 
     def putUserDiscordData(userid: int, discorddata: dict):
         data = {
-            discorddata
+            'discorddata': discorddata
         }
 
         cursor = MySQLBase.connection.cursor()
