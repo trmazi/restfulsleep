@@ -1,7 +1,6 @@
-from wsgiref import headers
 from flask_restful import Resource, reqparse
-from flask import request, redirect
-#from api.data.mysql import MySQLBase
+from flask import redirect
+from api.data.mysql import MySQLBase
 import requests
 
 class linkDiscordToUser(Resource):
@@ -65,6 +64,6 @@ class linkDiscordToUser(Resource):
                 'refresh_token': refresh_token,
             }
 
-            
+            MySQLBase.putUserDiscordData(user_id, discord_info)
 
         return redirect("https://phaseii.network", code=302)
