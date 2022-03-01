@@ -33,5 +33,5 @@ class MySQLBase():
         data = json.dumps(data)
 
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin}, data = {data} WHERE id = {userid}')
+        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin} WHERE id = {userid}')
         return None
