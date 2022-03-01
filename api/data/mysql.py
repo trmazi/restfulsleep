@@ -12,3 +12,6 @@ class MySQLBase():
         cursor.execute(f'SELECT * FROM {type}')
 
         return cursor.fetchall()
+
+    def push(type:str):
+        return None
