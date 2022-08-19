@@ -30,7 +30,7 @@ class MySQLBase():
 
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
+        #cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
         pw_hash = cursor.fetchone()
         if pw_hash == None:
             return False
@@ -55,7 +55,6 @@ class MySQLBase():
         """
         # Create a new session that is unique
         while True:
-            return None
             session = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
 
             cursor = MySQLBase.connection.cursor()
