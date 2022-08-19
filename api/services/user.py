@@ -52,10 +52,11 @@ class logUserIn(Resource):
                 if pass_verify == None:
                     bad_end('no account.')
             
-            if pass_verify:
-                aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
-                session = MySQLBase.createSession(userID, 'userid', 90 * 86400)
-                print(session)
+                if pass_verify:
+                    aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
+                    session = MySQLBase.createSession(userID, 'userid', 90 * 86400)
+                    print(session)
+                else: bad_end('wrong password.')
 
             
         bad_end('there was an issue in your request.')
