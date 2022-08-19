@@ -1,6 +1,6 @@
 from flask_restful import Resource
 from datetime import datetime
-import json
+from data.json import JsonEncoded
 
 from api.data.mysql import MySQLBase
 
@@ -12,7 +12,7 @@ class getAllNews(Resource):
             print(news)
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'image_url': json.dumps(news[4])}
+            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'data': JsonEncoded.deserialize(news[4])}
             dicts.append(v)
         return dicts, 200
 
@@ -23,7 +23,7 @@ class getLatestNews(Resource):
         for news in data:
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'image_url': json.dumps(news[4])}
+            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'data': JsonEncoded.deserialize(news[4])}
             dicts.append(v)
         return {
             'news':dicts
