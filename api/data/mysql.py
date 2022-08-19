@@ -22,7 +22,7 @@ class MySQLBase():
 
     def getUserFromName(username: str) -> int:
         cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT id FROM user WHERE username = {username}')
+        cursor.execute(f'SELECT id FROM user WHERE username = "{username}"')
         return cursor.fetchone()
 
     def putUserDiscordData(userid: int, discorddata: dict):
