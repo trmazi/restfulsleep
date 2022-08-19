@@ -48,13 +48,13 @@ class logUserIn(Resource):
                 bad_end('no account.')
 
             if password != None:
-                pass_verify = MySQLBase.validatePassword(password, userID)
+                pass_verify = MySQLBase.validatePassword(password, userID[0])
                 if pass_verify == None:
                     bad_end('no account.')
             
                 if pass_verify:
                     aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
-                    session = MySQLBase.createSession(userID, 'userid', 90 * 86400)
+                    session = MySQLBase.createSession(userID[0], 'userid', 90 * 86400)
                     print(session)
                 else: bad_end('wrong password.')
 
