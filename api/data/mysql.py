@@ -55,6 +55,7 @@ class MySQLBase():
         """
         # Create a new session that is unique
         while True:
+            return None
             session = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
 
             cursor = MySQLBase.connection.cursor()
