@@ -20,6 +20,11 @@ class MySQLBase():
         cursor.execute(f'SELECT username, email, admin, data FROM user WHERE id = {userid}')
         return cursor.fetchone()
 
+    def getUserFromName(username: str) -> int:
+        cursor = MySQLBase.connection.cursor()
+        cursor.execute(f'SELECT id FROM user WHERE username = {username}')
+        return cursor.fetchone()
+
     def putUserDiscordData(userid: int, discorddata: dict):
         userdata = MySQLBase.getUser(userid)
         username = userdata[0]

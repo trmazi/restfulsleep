@@ -28,3 +28,31 @@ class userFromPIN(Resource):
         
         # Unknown user. sucks to suck :shrug:
         return {'status': '0'}, 205
+
+class userIDFromUsername(Resource):
+    def get(self):
+        '''
+        Get a userID using a user's name.
+        '''
+        parser = reqparse.RequestParser()
+        parser.add_argument('username', type=str)
+        args = parser.parse_args()
+        username = str(args['username'])
+
+        current_error = None
+        if username != None:
+            userID = MySQLBase.getUserFromName(username)
+            if userID == None:
+                current_error = 'no_account'
+
+            return {'user': 
+                {
+                    'id':userID,
+                },
+                'status': 'success'
+            }, 200
+        else:
+            current_error = 'no_username'    
+        
+        # Unknown user. sucks to suck :shrug:
+        return {'status': 'error', 'error_code': current_error}
