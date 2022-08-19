@@ -1,7 +1,7 @@
 from flask_restful import Resource
 from datetime import datetime
-from data.json import JsonEncoded
 
+from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 
 class getAllNews(Resource):
