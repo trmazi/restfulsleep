@@ -44,19 +44,19 @@ class logUserIn(Resource):
 
         if username != None:
             userID = MySQLBase.getUserFromName(username)
-            if userID[0] == None:
-                bad_end('no account.')
+            if userID == None:
+                return bad_end('no account.')
 
             if password != None:
                 pass_verify = MySQLBase.validatePassword(password, userID[0])
                 if pass_verify == None:
-                    bad_end('no account.')
+                    return bad_end('no account.')
             
                 if pass_verify:
                     aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
                     session = MySQLBase.createSession(userID[0], 'userid', 90 * 86400)
                     return {'status': 'success', 'session_id': aes.encrypt(session), 'userid': userID[0]}
 
-                else: bad_end('wrong password.')
+                else: return bad_end('wrong password.')
 
-        bad_end('there was an issue in your request.')
+        return bad_end('there was an issue in your request.')
