@@ -2,6 +2,7 @@ from flask_restful import Resource, reqparse
 from flask import request
 
 from api.data.mysql import MySQLBase
+from utils.aes import AESCipher
 
 class userFromPIN(Resource):
     def get(self):
@@ -30,55 +31,31 @@ class userFromPIN(Resource):
         # Unknown user. sucks to suck :shrug:
         return {'status': '0'}, 205
 
-class userIDFromUsername(Resource):
+class logUserIn(Resource):
     def get(self):
         '''
-        Get a userID using a user's name.
+        Gets a user's username and password, validates them, makes a session.
         '''
-        username = request.args.get('username')
+        password = request.headers.get('password', None)
+        username = request.headers.get('username', None)
 
-        current_error = None
+        def bad_end(error):
+            return {'status': 'error', 'error_code': error}
+
         if username != None:
             userID = MySQLBase.getUserFromName(username)
             if userID == None:
-                current_error = 'no_account'
-            else:
-                return {'user': 
-                    {
-                        'id':userID,
-                    },
-                    'status': 'success'
-                }, 200
-        else:
-            current_error = 'no_username'    
-        
-        # Unknown user. sucks to suck :shrug:
-        return {'status': 'error', 'error_code': current_error}
+                bad_end('no account.')
 
-class validateUserPassword(Resource):
-    def get(self):
-        '''
-        Return a bool if it's the correct password.
-        '''
-        userid = None
+            if password != None:
+                pass_verify = MySQLBase.validatePassword(password, userID)
+                if pass_verify == None:
+                    bad_end('no account.')
+            
+            if pass_verify:
+                aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
+                session = MySQLBase.createSession(userID, 'userid', 90 * 86400)
+                print(session)
 
-        if request.args.get('id') != None:
-            userid = int(request.args.get('id'))
-        
-        password = request.headers.get('password', None)
-
-        current_error = None
-        if userid != None and password != None:
-            pass_verify = MySQLBase.validatePassword(password, userid)
-            if pass_verify == None:
-                current_error = 'no_account'
-            else:
-                return {
-                    'verify': pass_verify,
-                    'status': 'success'
-                }, 200
-        else:
-            current_error = 'no_id_or_password'    
-        
-        # password error.
-        return {'status': 'error', 'error_code': current_error}
+            
+        bad_end('there was an issue in your request.')

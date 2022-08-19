@@ -5,8 +5,7 @@ import argparse
 
 #import the services
 from api.services.news import getAllNews, getLatestNews
-from api.services.user import userIDFromUsername
-from api.services.user import validateUserPassword
+from api.services.user import logUserIn
 
 app = Flask(__name__)
 api = Api(app)
@@ -20,8 +19,7 @@ class restfulTop(Resource):
 api.add_resource(restfulTop, '/')
 api.add_resource(getAllNews, '/v1/news/getAllNews')
 api.add_resource(getLatestNews, '/v1/news/getLatestNews')
-api.add_resource(userIDFromUsername, '/v1/auth/user/fromName')
-api.add_resource(validateUserPassword, '/v1/auth/user/validatePassword')
+api.add_resource(logUserIn, '/v1/auth/user/createSession')
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")

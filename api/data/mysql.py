@@ -1,6 +1,8 @@
 import mysql.connector
 import json
 from passlib.hash import pbkdf2_sha512
+import random
+import time
 
 class MySQLBase():
     connection = mysql.connector.connect(
@@ -40,18 +42,35 @@ class MySQLBase():
         except (ValueError, TypeError):
             return False
 
-    def putUserDiscordData(userid: int, discorddata: dict):
-        userdata = MySQLBase.getUser(userid)
-        username = userdata[0]
-        email = userdata[1]
-        admin = userdata[2]
+    def createSession(opid: int, optype: str, expiration: int=(30 * 86400)) -> str:
+        """
+        Given an ID, create a session string.
 
-        data = {
-            "discorddata": discorddata
-        }
+        Parameters:
+            opid - ID we wish to start a session for.
+            expiration - Number of seconds before this session is invalid.
 
-        data = json.dumps(data)
+        Returns:
+            A string that can be used as a session ID.
+        """
+        # Create a new session that is unique
+        while True:
+            session = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
 
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'UPDATE user SET username = {username}, email = {email}, admin = {admin} WHERE id = {userid}')
-        return None
+            cursor = MySQLBase.connection.cursor()
+            cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
+
+            if cursor.fetchone() == None:
+                # Make sure sessions expire in a reasonable amount of time
+                expiration = int(time.time() + expiration)
+
+                # Use that session
+                sql = (
+                    "INSERT INTO session (id, session, type, expiration) " +
+                    f"VALUES ({opid}, '{session}', '{optype}', {expiration})"
+                )
+                cursor.execute(sql)
+
+                cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
+                if cursor.fetchone() != None:
+                    return session
