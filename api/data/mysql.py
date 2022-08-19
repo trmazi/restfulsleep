@@ -32,6 +32,7 @@ class MySQLBase():
         pw_hash = cursor.fetchone()
         if pw_hash == None:
             return False
+        print(pw_hash)
 
         try:
             # Verifying the password
