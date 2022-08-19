@@ -10,7 +10,7 @@ class getAllNews(Resource):
         for news in data:
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', '')}
+            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'image_url': news[4]}
             dicts.append(v)
         return dicts, 200
 
@@ -21,7 +21,7 @@ class getLatestNews(Resource):
         for news in data:
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', '')}
+            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'image_url': news[4]}
             dicts.append(v)
         return {
             'news':dicts
