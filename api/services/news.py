@@ -9,7 +9,6 @@ class getAllNews(Resource):
         data = MySQLBase.pull('news ORDER BY timestamp DESC')
         dicts = []
         for news in data:
-            print(news)
             unixtime = news[1]
             humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
             v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'data': JsonEncoded.deserialize(news[4])}
