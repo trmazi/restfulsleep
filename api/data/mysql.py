@@ -29,10 +29,9 @@ class MySQLBase():
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
-        pw_hash = cursor.fetchone()
+        pw_hash = cursor.fetchone()[0] if cursor.fetchone() != None else None
         if pw_hash == None:
             return False
-        print(pw_hash)
 
         try:
             # Verifying the password
