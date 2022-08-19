@@ -2,7 +2,7 @@ from flask_restful import Resource, reqparse
 from flask import request
 
 from api.data.mysql import MySQLBase
-from data.aes import AESCipher
+from api.data.aes import AESCipher
 
 class userFromPIN(Resource):
     def get(self):
