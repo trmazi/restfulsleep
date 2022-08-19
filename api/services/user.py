@@ -60,8 +60,10 @@ class validateUserPassword(Resource):
         '''
         Return a bool if it's the correct password.
         '''
-        userid = int(request.args.get('id'))
-        password = str(request.args.get('password'))
+        if request.args.get('id') != None:
+            userid = int(request.args.get('id'))
+        if request.args.get('password') != None:
+            password = str(request.args.get('password'))
 
         current_error = None
         if userid != None and password != None:
