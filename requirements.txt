@@ -4,4 +4,4 @@ mysql.connector
 argparse
 requests
 passlib
-crypto
+pycryptodome
