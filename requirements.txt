@@ -3,3 +3,4 @@ flask_restful
 mysql.connector
 argparse
 requests
+passlib

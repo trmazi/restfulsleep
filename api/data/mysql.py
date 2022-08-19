@@ -1,5 +1,6 @@
 import mysql.connector
 import json
+from passlib.hash import pbkdf2_sha512
 
 class MySQLBase():
     connection = mysql.connector.connect(
@@ -24,6 +25,19 @@ class MySQLBase():
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT id FROM user WHERE username = "{username}"')
         return cursor.fetchone()
+
+    def validatePassword(plain_password: str, userID: int) -> bool:
+        cursor = MySQLBase.connection.cursor()
+        cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
+        pw_hash = cursor.fetchone()
+        if pw_hash == None:
+            return False
+
+        try:
+            # Verifying the password
+            return pbkdf2_sha512.verify(plain_password, pw_hash)
+        except (ValueError, TypeError):
+            return False
 
     def putUserDiscordData(userid: int, discorddata: dict):
         userdata = MySQLBase.getUser(userid)

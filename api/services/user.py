@@ -54,3 +54,27 @@ class userIDFromUsername(Resource):
         
         # Unknown user. sucks to suck :shrug:
         return {'status': 'error', 'error_code': current_error}
+
+class validateUserPassword(Resource):
+    def get(self):
+        '''
+        Return a bool if it's the correct password.
+        '''
+        userid = int(request.args.get('id'))
+        password = str(request.args.get('password'))
+
+        current_error = None
+        if userid != None and password != None:
+            pass_verify = MySQLBase.validatePassword(password, userid)
+            if pass_verify == None:
+                current_error = 'no_account'
+            else:
+                return {
+                    'verify': pass_verify,
+                    'status': 'success'
+                }, 200
+        else:
+            current_error = 'no_id_or_password'    
+        
+        # password error.
+        return {'status': 'error', 'error_code': current_error}
