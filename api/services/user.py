@@ -42,13 +42,13 @@ class userIDFromUsername(Resource):
             userID = MySQLBase.getUserFromName(username)
             if userID == None:
                 current_error = 'no_account'
-
-            return {'user': 
-                {
-                    'id':userID,
-                },
-                'status': 'success'
-            }, 200
+            else:
+                return {'user': 
+                    {
+                        'id':userID,
+                    },
+                    'status': 'success'
+                }, 200
         else:
             current_error = 'no_username'    
         
