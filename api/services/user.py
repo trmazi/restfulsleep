@@ -44,7 +44,7 @@ class logUserIn(Resource):
 
         if username != None:
             userID = MySQLBase.getUserFromName(username)
-            if userID == None:
+            if userID[0] == None:
                 bad_end('no account.')
 
             if password != None:
