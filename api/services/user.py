@@ -55,8 +55,8 @@ class logUserIn(Resource):
                 if pass_verify:
                     aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
                     session = MySQLBase.createSession(userID[0], 'userid', 90 * 86400)
-                    print(session)
+                    return {'status': 'success', 'session_id': aes.encrypt(session), 'userid': userID[0]}
+
                 else: bad_end('wrong password.')
 
-            
         bad_end('there was an issue in your request.')
