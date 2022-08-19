@@ -1,4 +1,5 @@
 from flask_restful import Resource, reqparse
+from flask import request
 
 from api.data.mysql import MySQLBase
 
@@ -34,10 +35,7 @@ class userIDFromUsername(Resource):
         '''
         Get a userID using a user's name.
         '''
-        parser = reqparse.RequestParser()
-        parser.add_argument('username', type=str)
-        args = parser.parse_args()
-        username = str(args['username'])
+        username = request.args.get('username')
 
         current_error = None
         if username != None:
