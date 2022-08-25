@@ -1,5 +1,4 @@
 import mysql.connector
-import json
 from passlib.hash import pbkdf2_sha512
 import random
 import time
@@ -15,23 +14,32 @@ class MySQLBase():
     def pull(type:str):
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT * FROM {type}')
+        data = cursor.fetchall()
+        cursor.close()
 
-        return cursor.fetchall()
+        return data
 
     def getUser(userid: int):
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT username, email, admin, data FROM user WHERE id = {userid}')
-        return cursor.fetchone()
+        data = cursor.fetchone()
+        cursor.close()
+
+        return data
 
     def getUserFromName(username: str) -> int:
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT id FROM user WHERE username = "{username}"')
-        return cursor.fetchone()
+        data = cursor.fetchone()
+        cursor.close()
+
+        return data
 
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()
         cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
         pw_hash = cursor.fetchone()
+        cursor.close()
         if pw_hash == None:
             return False
         pw_hash = pw_hash[0]
@@ -59,8 +67,9 @@ class MySQLBase():
 
             cursor = MySQLBase.connection.cursor()
             cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
-
-            if cursor.fetchone() == None:
+            data = cursor.fetchone()
+            
+            if data == None:
                 # Make sure sessions expire in a reasonable amount of time
                 expiration = int(time.time() + expiration)
 
@@ -72,5 +81,7 @@ class MySQLBase():
                 cursor.execute(sql)
 
                 cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
-                if cursor.fetchone() != None:
+                data = cursor.fetchone()
+                cursor.close()
+                if data != None:
                     return session
