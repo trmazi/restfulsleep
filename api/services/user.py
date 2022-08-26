@@ -71,11 +71,11 @@ class deleteUserSession(Resource):
             return {'status': 'error', 'error_code': error}
         
         if session_id == None:
-            bad_end('No json data was sent!')
+            return bad_end('No json data was sent!')
         
         session_id = session_id.get('sessionID', None)
         if session_id == None:
-            bad_end('No sessionID was sent!')
+            return bad_end('No sessionID was sent!')
 
         MySQLBase.deleteSession(session_id)
         return {'status': 'success'}
