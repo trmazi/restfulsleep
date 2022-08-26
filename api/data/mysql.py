@@ -85,3 +85,15 @@ class MySQLBase():
                 cursor.close()
                 if data != None:
                     return session
+
+    def deleteSession(sessionID: str) -> None:
+        '''
+        Destroy a previously-created session.
+
+        Parameters:
+            sessionID - A session id string as returned from create_session.
+        '''
+        # Remove the session token
+        cursor = MySQLBase.connection.cursor()
+        cursor.execute(f"DELETE FROM session WHERE session = '{sessionID}' AND type = 'userid'")
+        cursor.close()

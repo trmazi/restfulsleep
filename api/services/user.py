@@ -60,3 +60,11 @@ class logUserIn(Resource):
                 else: return bad_end('wrong password.')
 
         return bad_end('there was an issue in your request.')
+
+class deleteUserSession(Resource):
+    def post(self):
+        '''
+        Given a user's session id, delete it from the db.
+        '''
+        session_id = request.get_json(force=True)
+        print(session_id)
