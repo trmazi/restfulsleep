@@ -66,5 +66,16 @@ class deleteUserSession(Resource):
         '''
         Given a user's session id, delete it from the db.
         '''
-        session_id = request.get_json(force=True)
-        print(session_id)
+        session_id = request.get_json(silent=True)
+        def bad_end(error):
+            return {'status': 'error', 'error_code': error}
+        
+        if session_id == None:
+            bad_end('No json data was sent!')
+        
+        session_id = session_id.get('sessionID', None)
+        if session_id == None:
+            bad_end('No sessionID was sent!')
+
+        MySQLBase.deleteSession(session_id)
+        return {'status': 'success'}
