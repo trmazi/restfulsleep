@@ -89,8 +89,8 @@ class getGameProfile(Resource):
         game = request.headers.get('game', None)
         version = int(request.headers.get('version', None))
         userid = int(request.headers.get('userid', None))
-        just_stats = bool(request.headers.get('stats_only', 0))
-
+        just_stats = request.headers.get('stats_only', 0)
+        
         def bad_end(error):
             return {'status': 'error', 'error_code': error}
 
