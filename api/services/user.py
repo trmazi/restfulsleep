@@ -89,7 +89,7 @@ class getGameProfile(Resource):
         game = request.headers.get('game', None)
         version = int(request.headers.get('version', None))
         userid = int(request.headers.get('userid', None))
-        just_stats = request.headers.get('stats_only', None)
+        just_stats = request.headers.get('stats', None)
         print(just_stats)
 
         def bad_end(error):
