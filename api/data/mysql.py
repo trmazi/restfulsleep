@@ -1,7 +1,10 @@
+from typing import Dict
 import mysql.connector
 from passlib.hash import pbkdf2_sha512
 import random
 import time
+
+from api.data.json import JsonEncoded
 
 class MySQLBase():
     connection = mysql.connector.connect(
@@ -34,6 +37,38 @@ class MySQLBase():
         cursor.close()
 
         return data
+
+    def getProfile(game: str, version: int, userid: int) -> Dict:
+        '''
+        Pull a user's profile.
+        '''
+        cursor = MySQLBase.connection.cursor()
+        sql = (
+            "SELECT refid.refid AS refid, extid.extid AS extid " +
+            "FROM refid, extid " +
+            "WHERE refid.userid = :userid AND refid.game = :game AND refid.version = :version AND "
+            "extid.userid = refid.userid AND extid.game = refid.game"
+        )
+        cursor.execute(sql, {'userid': userid, 'game': game, 'version': version})
+        data = cursor.fetchone()
+        if data == None:
+            return {'status': 'error', 'error_code': 'no profile'}
+
+        profile = {
+            'refid': data['refid'],
+            'extid': data['extid'],
+            'game': game,
+            'version': version,
+        }
+
+        sql = "SELECT data FROM profile WHERE refid = :refid"
+        cursor.execute(sql, {'refid': profile['refid']})
+        data = cursor.fetchone()
+        if data == None:
+            return {'status': 'error', 'error_code': 'no profile'}
+
+        cursor.close()
+        return(JsonEncoded.deserialize(data['data']))
 
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()

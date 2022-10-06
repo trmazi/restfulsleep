@@ -79,3 +79,32 @@ class deleteUserSession(Resource):
 
         MySQLBase.deleteSession(session_id)
         return {'status': 'success'}
+
+class getGameProfile(Resource):
+    '''
+    Given a game, version, and userid. 
+    If user exists, return their profile.
+    '''
+    def get(self):
+        game = request.headers.get('game', None)
+        version = request.headers.get('version', None)
+        userid = request.headers.get('userid', None)
+
+        def bad_end(error):
+            return {'status': 'error', 'error_code': error}
+
+        if game == None:
+            return(bad_end('No game code was provided'))
+        if version == None:
+            return(bad_end('No game version was provided'))
+        if userid == None:
+            return(bad_end('No userid provided'))
+
+        data = MySQLBase.getProfile(game, version, userid)
+        if data == None:
+            return(bad_end('no profile'))
+
+        if data['status'] == 'error':
+            return(bad_end(data['error_code']))
+
+        return(data)
