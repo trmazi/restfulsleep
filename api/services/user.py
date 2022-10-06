@@ -87,8 +87,8 @@ class getGameProfile(Resource):
     '''
     def get(self):
         game = request.headers.get('game', None)
-        version = request.headers.get('version', None)
-        userid = request.headers.get('userid', None)
+        version = int(request.headers.get('version', None))
+        userid = int(request.headers.get('userid', None))
 
         def bad_end(error):
             return {'status': 'error', 'error_code': error}
