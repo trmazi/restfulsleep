@@ -45,9 +45,9 @@ class MySQLBase():
         cursor = MySQLBase.connection.cursor()
         sql = (
             "SELECT refid FROM refid" +
-            'WHERE userid = :userid AND game = ":game" AND version = :version'
+            f'WHERE userid = {userid} AND game = "{game}" AND version = {version}'
         )
-        cursor.execute(sql, {'userid': userid, 'game': game, 'version': version})
+        cursor.execute(sql)
         data = cursor.fetchone()
         if data == None:
             return {'status': 'error', 'error_code': 'no profile'}
