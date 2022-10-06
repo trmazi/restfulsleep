@@ -51,7 +51,7 @@ class MySQLBase():
         if data == None:
             return {'status': 'error', 'error_code': 'no profile'}
 
-        sql = f'SELECT data FROM profile WHERE refid = "{data}"'
+        sql = f'SELECT data FROM profile WHERE refid = "{data[0]}"'
         print(sql)
         cursor.execute(sql)
         data = cursor.fetchone()
@@ -60,7 +60,7 @@ class MySQLBase():
             return {'status': 'error', 'error_code': 'no profile'}
 
         cursor.close()
-        return(JsonEncoded.deserialize(data))
+        return(JsonEncoded.deserialize(data[0]))
 
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()
