@@ -44,8 +44,7 @@ class MySQLBase():
         '''
         cursor = MySQLBase.connection.cursor()
         sql = (
-            "SELECT refid FROM refid" +
-            f'WHERE userid = {userid} AND game = "{game}" AND version = {version}'
+            f'SELECT refid FROM refid WHERE userid = {userid} AND game = "{game}" AND version = {version}'
         )
         cursor.execute(sql)
         data = cursor.fetchone()
