@@ -52,6 +52,7 @@ class MySQLBase():
             return {'status': 'error', 'error_code': 'no profile'}
 
         sql = f'SELECT data FROM profile WHERE refid = "{data}"'
+        print(sql)
         cursor.execute(sql)
         data = cursor.fetchone()
         print(data)
