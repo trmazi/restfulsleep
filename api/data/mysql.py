@@ -51,7 +51,7 @@ class MySQLBase():
         if data == None:
             return {'status': 'error', 'error_code': 'no profile'}
 
-        sql = f"SELECT data FROM profile WHERE refid = '{data}'"
+        sql = f'SELECT data FROM profile WHERE refid = "{data}"'
         cursor.execute(sql)
         data = cursor.fetchone()
         if data == None:
