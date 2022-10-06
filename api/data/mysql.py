@@ -60,7 +60,10 @@ class MySQLBase():
             return {'status': 'error', 'error_code': 'no profile'}
 
         cursor.close()
-        return(JsonEncoded.deserialize(data[0]))
+
+        data = JsonEncoded.deserialize(data[0])
+        data['status'] = 'good'
+        return(data)
 
     def validatePassword(plain_password: str, userID: int) -> bool:
         cursor = MySQLBase.connection.cursor()
