@@ -38,9 +38,9 @@ class MySQLBase():
 
         return data
 
-    def getProfile(game: str, version: int, userid: int) -> Dict:
+    def getProfile(game: str, version: int, userid: int, juststats: bool) -> Dict:
         '''
-        Pull a user's profile.
+        Pull a user's profile and playstats.
         '''
         cursor = MySQLBase.connection.cursor()
         sql = (
@@ -52,16 +52,22 @@ class MySQLBase():
             return {'status': 'error', 'error_code': 'no profile'}
 
         sql = f'SELECT data FROM profile WHERE refid = "{data[0]}"'
-        print(sql)
         cursor.execute(sql)
         data = cursor.fetchone()
-        print(data)
         if data == None:
             return {'status': 'error', 'error_code': 'no profile'}
 
+        if juststats:
+            sql = f'SELECT data FROM game_settings WHERE game = "{game}" AND userid = {userid}'
+            cursor.execute(sql)
+            stats = cursor.fetchone()
+
         cursor.close()
 
-        data = JsonEncoded.deserialize(data[0])
+        if juststats:
+            data = JsonEncoded.deserialize(stats[0])
+        else:
+            data = JsonEncoded.deserialize(data[0])
         data['status'] = 'good'
         return(data)
 

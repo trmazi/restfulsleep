@@ -89,6 +89,7 @@ class getGameProfile(Resource):
         game = request.headers.get('game', None)
         version = int(request.headers.get('version', None))
         userid = int(request.headers.get('userid', None))
+        just_stats = bool(request.headers.get('stats_only', 0))
 
         def bad_end(error):
             return {'status': 'error', 'error_code': error}
@@ -100,7 +101,8 @@ class getGameProfile(Resource):
         if userid == None:
             return(bad_end('No userid provided'))
 
-        data = MySQLBase.getProfile(game, version, userid)
+        data = MySQLBase.getProfile(game, version, userid, just_stats)
+
         if data == None:
             return(bad_end('no profile'))
 
