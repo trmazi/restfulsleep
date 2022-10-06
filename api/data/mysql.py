@@ -44,10 +44,8 @@ class MySQLBase():
         '''
         cursor = MySQLBase.connection.cursor()
         sql = (
-            "SELECT refid.refid AS refid, extid.extid AS extid " +
-            "FROM refid, extid " +
-            "WHERE refid.userid = :userid AND refid.game = :game AND refid.version = :version AND "
-            "extid.userid = refid.userid AND extid.game = refid.game"
+            "SELECT refid FROM refid" +
+            "WHERE userid = :userid AND game = :game AND version = :version"
         )
         cursor.execute(sql, {'userid': userid, 'game': game, 'version': version})
         data = cursor.fetchone()
@@ -56,13 +54,12 @@ class MySQLBase():
 
         profile = {
             'refid': data['refid'],
-            'extid': data['extid'],
             'game': game,
             'version': version,
         }
 
-        sql = "SELECT data FROM profile WHERE refid = :refid"
-        cursor.execute(sql, {'refid': profile['refid']})
+        sql = f"SELECT data FROM profile WHERE refid = '{data['refid']}'"
+        cursor.execute(sql)
         data = cursor.fetchone()
         if data == None:
             return {'status': 'error', 'error_code': 'no profile'}
