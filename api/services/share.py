@@ -3,5 +3,9 @@ from flask import request
 
 class shareServerStatus(Resource):
     def get(self):
-        print(request.headers)
-        return { "status": "ok" }, 200
+        return { "status": 200 }, 200
+    
+class shareBeginUpload(Resource):
+    def post(self):
+        print(request.data)
+        return { "status": 200 }, 200
