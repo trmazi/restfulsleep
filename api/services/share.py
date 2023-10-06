@@ -29,6 +29,10 @@ class shareBeginUpload(Resource):
     
 class shareVideoUpload(Resource):
     def put(self, sessionId):
+        with open(f'upload_{sessionId}_playVideo.mp4', 'wb') as videoFile:
+            if request.data:
+                videoFile.write(request.data)
+
         return 200
 
 class shareEndUpload(Resource):
