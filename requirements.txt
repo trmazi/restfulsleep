@@ -5,4 +5,4 @@ argparse
 requests
 passlib
 pycryptodome
-discord.py
+discord-webhook
