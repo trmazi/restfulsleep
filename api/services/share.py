@@ -3,9 +3,39 @@ from flask import request
 
 class shareServerStatus(Resource):
     def get(self):
-        return { "status": 200 }, 200
-    
+        responseData = {
+            "status": 200,
+            "message": ""
+        }
+        return { responseData }, 200
+
+class shareNewSession(Resource):
+    def post(seld):
+        responseData = {
+            "status": 200,
+            "message": "",
+            "session": "testSession" # Replace with generated Session ID
+        }
+        return { responseData }, 200
+
 class shareBeginUpload(Resource):
     def post(self):
-        print(request.data)
-        return { "status": 200 }, 200
+        sessionId = "testSession"
+        responseData = {
+            "status": 200,
+            "message": "",
+            "url": f'http://10.5.7.3:9090/share/videoUpload/{sessionId}'
+        }
+        return { responseData }, 200
+    
+class shareVideoUpload(Resource):
+    def put(self):
+        return 200
+
+class shareEndUpload(Resource):
+    def post(self):
+        responseData = {
+            "status": 200,
+            "message": ""
+        }
+        return { responseData }, 200

@@ -8,7 +8,7 @@ from api.services.news import getAllNews, getLatestNews
 from api.services.user import logUserIn, deleteUserSession, getGameProfile
 
 # Video sharing stuff
-from api.services.share import shareServerStatus, shareBeginUpload
+from api.services.share import shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
 app = Flask(__name__)
 api = Api(app)
@@ -28,7 +28,10 @@ api.add_resource(getGameProfile, '/v1/user/getProfile')
 
 # Add video sharing stuff
 api.add_resource(shareServerStatus, '/share/server/status')
+api.add_resource(shareNewSession, '/share/sessions/new')
 api.add_resource(shareBeginUpload, '/share/sessions/<sessionId>/videos/<videoId>/begin-upload')
+api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>')
+api.add_resource(shareEndUpload, '/share/sessions/<sessionId>/videos/<videoId>/end-upload')
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
