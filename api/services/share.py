@@ -10,7 +10,7 @@ class shareServerStatus(Resource):
         return responseData, 200
 
 class shareNewSession(Resource):
-    def post(seld):
+    def post(self):
         responseData = {
             "status": 200,
             "message": "",
@@ -19,8 +19,7 @@ class shareNewSession(Resource):
         return responseData, 200
 
 class shareBeginUpload(Resource):
-    def post(self):
-        sessionId = "testSession"
+    def post(self, sessionId, videoId):
         responseData = {
             "status": 200,
             "message": "",
@@ -29,11 +28,11 @@ class shareBeginUpload(Resource):
         return responseData, 200
     
 class shareVideoUpload(Resource):
-    def put(self):
+    def put(self, sessionId):
         return 200
 
 class shareEndUpload(Resource):
-    def post(self):
+    def post(self, sessionId, videoId):
         responseData = {
             "status": 200,
             "message": ""
