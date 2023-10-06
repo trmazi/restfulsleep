@@ -1,5 +1,6 @@
 from flask_restful import Resource
 from flask import request
+from api.external.discord import GoodSaniacWebhook
 
 class shareServerStatus(Resource):
     def get(self):
@@ -29,9 +30,8 @@ class shareBeginUpload(Resource):
     
 class shareVideoUpload(Resource):
     def put(self, sessionId):
-        with open(f'upload_{sessionId}_playVideo.mp4', 'wb') as videoFile:
-            if request.data:
-                videoFile.write(request.data)
+        if request.data:
+            GoodSaniacWebhook().sendVideoMessage(request.data)
 
         return 200
 
