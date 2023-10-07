@@ -1,7 +1,7 @@
 import time
 from discord_webhook import DiscordWebhook
 
-class GoodSaniacWebhook:
+class GoodSaniacWebhook():
     def __init__(self) -> None:
         self.webhookUrl = "https://discord.com/api/webhooks/1159993812966453289/cWqU5uxoNGHTPoOYgsAX11bl62lfu0pR277sZ1NUjfMlaQSpqw7wncpOkTKueBj6no-S"
 
