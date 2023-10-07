@@ -36,6 +36,9 @@ setup(
         'api.data',
         'api.services',
 
+        # External communications
+        'api.external',
+
         # Wrapper scripts, utilities and associated code.
         'api.utils',
 
