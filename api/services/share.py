@@ -24,7 +24,7 @@ class shareBeginUpload(Resource):
         responseData = {
             "status": 200,
             "message": "",
-            "url": f'http://10.5.7.3:9090/share/videoUpload/{sessionId}'
+            "url": f'https://restfulsleep.phaseii.network/share/videoUpload/{sessionId}'
         }
         return responseData, 200
     
