@@ -1,29 +1,15 @@
 from flask_restful import Resource
-from datetime import datetime
 
-from api.data.json import JsonEncoded
-from api.data.mysql import MySQLBase
+from api.data.endpoints.news import NewsData
 
 class getAllNews(Resource):
     def get(self):
-        data = MySQLBase.pull('news ORDER BY timestamp DESC')
-        dicts = []
-        for news in data:
-            unixtime = news[1]
-            humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'data': JsonEncoded.deserialize(news[4])}
-            dicts.append(v)
-        return dicts, 200
+        data = NewsData.getAllNews()
+        return data, 200
 
-class getLatestNews(Resource):
-    def get(self):
-        data = MySQLBase.pull('news ORDER BY timestamp DESC LIMIT 1')
-        dicts = []
-        for news in data:
-            unixtime = news[1]
-            humantime = datetime.utcfromtimestamp(unixtime).strftime('%Y-%m-%d')
-            v = {'id':news[0],'timestamp':humantime, 'title':news[2], 'body':news[3].replace('<br>', ''), 'data': JsonEncoded.deserialize(news[4])}
-            dicts.append(v)
+class getNews(Resource):
+    def get(self, newsId):
+        data = NewsData.getNews(newsId)
         return {
-            'news':dicts
+            'news': data
         }, 200

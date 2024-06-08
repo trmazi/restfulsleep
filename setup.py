@@ -26,7 +26,7 @@ class CleanExtCommand(Command):
 
 setup(
     name='RestfulSleep API',
-    version='0.1',
+    version='1.1',
     description="PhaseII Network's powerful API built on Flask and REST",
     author='PhaseII Team',
     license='Public Domain',

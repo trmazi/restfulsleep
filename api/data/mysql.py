@@ -1,135 +1,48 @@
-from typing import Dict
-import mysql.connector
-from passlib.hash import pbkdf2_sha512
-import random
-import time
+from typing import Dict, Any
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.engine import Engine
+from sqlalchemy.orm import sessionmaker
 
 from api.data.json import JsonEncoded
+from api.data.types import Refid, Profile, GameSettings
 
-class MySQLBase():
-    connection = mysql.connector.connect(
-        host="localhost",
-        user="bemani",
-        password="bemani",
-        database="bemani"
-    )
+Base = declarative_base()
 
-    def pull(type:str):
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT * FROM {type}')
-        data = cursor.fetchall()
-        cursor.close()
+class MySQLBase:
+    engine: Engine = None
+    SessionLocal = None
 
-        return data
+    @staticmethod
+    def update_connection(db_config: Dict[str, Any]) -> None:
+        user = db_config.get('user', '')
+        password = db_config.get('pass', '')
+        host = db_config.get('host', 'localhost')
+        database = db_config.get('db', '')
 
-    def getUser(userid: int):
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT username, email, admin, data FROM user WHERE id = {userid}')
-        data = cursor.fetchone()
-        cursor.close()
+        connection_string = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
+        MySQLBase.engine = create_engine(connection_string)
+        MySQLBase.SessionLocal = sessionmaker(bind=MySQLBase.engine)
 
-        return data
+    def getProfile(game: str, version: int, userId: int, justStats: bool) -> Dict:
+        with MySQLBase.SessionLocal() as session:
+            refid = session.query(Refid.refid).filter(Refid.userId == userId, Refid.game == game, Refid.version == version).first()
+            if not refid:
+                return {'status': 'error', 'error_code': 'no profile'}
 
-    def getUserFromName(username: str) -> int:
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT id FROM user WHERE username = "{username}"')
-        data = cursor.fetchone()
-        cursor.close()
+            profile_data = session.query(Profile.data).filter(Profile.refid == refid[0]).first()
+            if not profile_data:
+                return {'status': 'error', 'error_code': 'no profile'}
 
-        return data
+            if justStats:
+                stats = session.query(GameSettings.data).filter(GameSettings.game == game, GameSettings.userId == userId).first()
+                if stats:
+                    data = JsonEncoded.deserialize(stats[0])
+            else:
+                data = JsonEncoded.deserialize(profile_data[0])
 
-    def getProfile(game: str, version: int, userid: int, juststats: bool) -> Dict:
-        '''
-        Pull a user's profile and playstats.
-        '''
-        cursor = MySQLBase.connection.cursor()
-        sql = (
-            f'SELECT refid FROM refid WHERE userid = {userid} AND game = "{game}" AND version = {version}'
-        )
-        cursor.execute(sql)
-        data = cursor.fetchone()
-        if data == None:
-            return {'status': 'error', 'error_code': 'no profile'}
+            data['status'] = 'good'
+            return data
 
-        sql = f'SELECT data FROM profile WHERE refid = "{data[0]}"'
-        cursor.execute(sql)
-        data = cursor.fetchone()
-        if data == None:
-            return {'status': 'error', 'error_code': 'no profile'}
-
-        if juststats:
-            sql = f'SELECT data FROM game_settings WHERE game = "{game}" AND userid = {userid}'
-            cursor.execute(sql)
-            stats = cursor.fetchone()
-
-        cursor.close()
-
-        if juststats:
-            data = JsonEncoded.deserialize(stats[0])
-        else:
-            data = JsonEncoded.deserialize(data[0])
-        data['status'] = 'good'
-        return(data)
-
-    def validatePassword(plain_password: str, userID: int) -> bool:
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f'SELECT password FROM user WHERE id = {userID}')
-        pw_hash = cursor.fetchone()
-        cursor.close()
-        if pw_hash == None:
-            return False
-        pw_hash = pw_hash[0]
-
-        try:
-            # Verifying the password
-            return pbkdf2_sha512.verify(plain_password, pw_hash)
-        except (ValueError, TypeError):
-            return False
-
-    def createSession(opid: int, optype: str, expiration: int=(30 * 86400)) -> str:
-        """
-        Given an ID, create a session string.
-
-        Parameters:
-            opid - ID we wish to start a session for.
-            expiration - Number of seconds before this session is invalid.
-
-        Returns:
-            A string that can be used as a session ID.
-        """
-        # Create a new session that is unique
-        while True:
-            session = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
-
-            cursor = MySQLBase.connection.cursor()
-            cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
-            data = cursor.fetchone()
-            
-            if data == None:
-                # Make sure sessions expire in a reasonable amount of time
-                expiration = int(time.time() + expiration)
-
-                # Use that session
-                sql = (
-                    "INSERT INTO session (id, session, type, expiration) " +
-                    f"VALUES ({opid}, '{session}', '{optype}', {expiration})"
-                )
-                cursor.execute(sql)
-
-                cursor.execute(f'SELECT session FROM session WHERE session = "{session}"')
-                data = cursor.fetchone()
-                cursor.close()
-                if data != None:
-                    return session
-
-    def deleteSession(sessionID: str) -> None:
-        '''
-        Destroy a previously-created session.
-
-        Parameters:
-            sessionID - A session id string as returned from create_session.
-        '''
-        # Remove the session token
-        cursor = MySQLBase.connection.cursor()
-        cursor.execute(f"DELETE FROM session WHERE session = '{sessionID}' AND type = 'userid'")
-        cursor.close()
+if MySQLBase.engine:
+    Base.metadata.create_all(MySQLBase.engine)

@@ -1,84 +1,51 @@
-from flask_restful import Resource, reqparse
+from flask_restful import Resource
 from flask import request
 
-from api.data.mysql import MySQLBase
-from api.data.aes import AESCipher
+from api.constants import APIConstants
+from api.data.endpoints.user import UserData
+from api.data.endpoints.session import SessionData
 
-class userFromPIN(Resource):
-    def get(self):
-        data = MySQLBase.pull('user')
-
-        parser = reqparse.RequestParser()
-        parser.add_argument('username', type=str)
-        parser.add_argument('pin', type=str)
-
-        args = parser.parse_args()
-        username = str(args['username'])
-        pin = str(args['pin'])
-
-        for user in data:
-            if username == user[2] and pin == user[1]:
-                return {'user': 
-                    {
-                        'id':str(user[0]),
-                        'name':user[2],
-                        'pin':user[1],
-                        'email':user[4],
-                        'is_admin':str(user[5])
-                    }
-                }, 200
+class getUserAccount(Resource):
+    '''
+    Given a user ID, return a user's public info.
+    '''
+    def get(self, userId):
+        user = UserData.getUser(int(userId))
+        if not user:
+            return APIConstants.bad_end('No user found.')
         
-        # Unknown user. sucks to suck :shrug:
-        return {'status': '0'}, 205
+        userAuthCode = request.headers.get('User-Auth-Key')
+        authUser = False;
+        if userAuthCode:
+            decryptedSession = None
+            try:
+                decryptedSession = SessionData.AES.decrypt(userAuthCode)
+            except:
+                return APIConstants.bad_end('Unable to decrypt SessionId!')
+            if not decryptedSession:
+                return APIConstants.bad_end('Unable to decrypt SessionId!')
 
-class logUserIn(Resource):
-    def get(self):
-        '''
-        Gets a user's username and password, validates them, makes a session.
-        '''
-        password = request.headers.get('password', None)
-        username = request.headers.get('username', None)
+            session = SessionData.checkSession(decryptedSession)
+            if session.get('active') == True and user.get('id', 0) == session.get('id', -1):
+                authUser = True
+        userData = user.get('data', {})
+        discordLink = userData.get('discord', {})
+        avatar = None
+        if discordLink.get('linked', False):
+            avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
 
-        def bad_end(error):
-            return {'status': 'error', 'error_code': error}
-
-        if username != None:
-            userID = MySQLBase.getUserFromName(username)
-            if userID == None:
-                return bad_end('no account.')
-
-            if password != None:
-                pass_verify = MySQLBase.validatePassword(password, userID[0])
-                if pass_verify == None:
-                    return bad_end('no account.')
-            
-                if pass_verify:
-                    aes = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
-                    session = MySQLBase.createSession(userID[0], 'userid', 90 * 86400)
-                    return {'status': 'success', 'session_id': aes.encrypt(session), 'userid': userID[0]}
-
-                else: return bad_end('wrong password.')
-
-        return bad_end('there was an issue in your request.')
-
-class deleteUserSession(Resource):
-    def post(self):
-        '''
-        Given a user's session id, delete it from the db.
-        '''
-        session_id = request.get_json(silent=True)
-        def bad_end(error):
-            return {'status': 'error', 'error_code': error}
-        
-        if session_id == None:
-            return bad_end('No json data was sent!')
-        
-        session_id = session_id.get('sessionID', None)
-        if session_id == None:
-            return bad_end('No sessionID was sent!')
-
-        MySQLBase.deleteSession(session_id)
-        return {'status': 'success'}
+        return {
+            'status': 'success',
+            'user': {
+                'id': user['id'],
+                'name': user['username'],
+                'email': user['email'] if authUser else None,
+                'admin': user['admin'],
+                'banned': user['banned'],
+                'avatar': avatar,
+                'data': user['data'] if authUser else None,
+            }
+        }
 
 class getGameProfile(Resource):
     '''
@@ -102,7 +69,7 @@ class getGameProfile(Resource):
         if userid == None:
             return(bad_end('No userid provided'))
 
-        data = MySQLBase.getProfile(game, version, userid, just_stats)
+        data = {}
 
         if data == None:
             return(bad_end('no profile'))

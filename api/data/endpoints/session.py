@@ -1,0 +1,42 @@
+import random
+import time
+
+from api.data.aes import AESCipher
+from api.data.types import Session
+from api.data.mysql import MySQLBase
+
+class SessionData:
+    AES = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
+
+    def createSession(opId: int, opType: str, expiration: int=(30 * 86400)) -> str:
+        session_token = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
+        expiration_time = int(time.time() + expiration)
+
+        with MySQLBase.SessionLocal() as session:
+            while session.query(Session).filter(Session.session == session_token).first():
+                session_token = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
+            
+            new_session = Session(id=opId, session=session_token, type=opType, expiration=expiration_time)
+            session.add(new_session)
+            session.commit()
+
+            return session_token
+        
+    def checkSession(sessionID: str) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            userSession = session.query(Session).filter(Session.session == sessionID, Session.type == 'userid').first()
+            if userSession != None:
+                return {
+                    'active': True,
+                    'id': int(userSession.id)
+                }
+            else:
+                return {
+                    'active': False,
+                    'id': None 
+                }
+        
+    def deleteSession(sessionID: str) -> None:
+        with MySQLBase.SessionLocal() as session:
+            session.query(Session).filter(Session.session == sessionID, Session.type == 'userid').delete()
+            session.commit()

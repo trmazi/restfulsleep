@@ -32,7 +32,15 @@ class AESCipher:
         return base64.b64encode(iv + cipher.encrypt(raw.encode('utf-8')), altchars=b"._").decode('utf-8')
 
     def decrypt(self, encoded: str) -> str:
-        enc = base64.b64decode(encoded.encode('utf-8'), altchars=b"._")
-        iv = enc[:AES.block_size]
-        cipher = AES.new(self.__key, AES.MODE_CBC, iv)
-        return self._unpad(cipher.decrypt(enc[AES.block_size:]).decode('utf-8'))
+        if len(encoded):
+            enc = base64.b64decode(encoded.encode('utf-8'), altchars=b"._")
+            iv = enc[:AES.block_size]
+            cipher = AES.new(self.__key, AES.MODE_CBC, iv)
+            unpadded = ""
+            try:
+                unpadded = self._unpad(cipher.decrypt(enc[AES.block_size:]).decode('utf-8'))
+            except ValueError:
+                return None
+            return unpadded
+        else:
+            return None
