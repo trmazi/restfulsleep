@@ -34,6 +34,7 @@ setup(
         # Core packages
         'api',
         'api.data',
+        'api.data.endpoints',
         'api.services',
 
         # External communications
