@@ -11,7 +11,7 @@ from api.data.mysql import MySQLBase
 # Services
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
-from api.services.user import getUserAccount, getGameProfile
+from api.services.user import getUserAccount, userCards, getGameProfile
 from api.services.share import shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
 app = Flask(__name__)
@@ -37,6 +37,7 @@ api.add_resource(deleteUserSession, '/v1/auth/deleteSession')
 
 # User Data
 api.add_resource(getUserAccount, '/v1/user/<userId>')
+api.add_resource(userCards, '/v1/user/cards')
 
 # Game Profiles
 api.add_resource(getGameProfile, '/v1/user/getProfile')

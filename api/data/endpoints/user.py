@@ -2,7 +2,7 @@ from passlib.hash import pbkdf2_sha512
 
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
-from api.data.types import User
+from api.data.types import User, Card
 
 class UserData:
     def validatePassword(plain_password: str, userID: int) -> bool:
@@ -43,3 +43,11 @@ class UserData:
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
                 }
+            
+    def getCards(userId: int) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            cards = session.query(Card).filter(Card.userid == userId).all()
+            if cards is None:
+                return None
+            else:
+                return [card.id for card in cards]

@@ -5,6 +5,8 @@ from api.constants import APIConstants
 from api.data.endpoints.user import UserData
 from api.data.endpoints.session import SessionData
 
+from api.data.card import CardCipher
+
 class getUserAccount(Resource):
     '''
     Given a user ID, return a user's public info.
@@ -45,6 +47,45 @@ class getUserAccount(Resource):
                 'avatar': avatar,
                 'data': user['data'] if authUser else None,
             }
+        }
+    
+class userCards(Resource):
+    '''
+    Handle loading, creation, and deletion of a user's cards. Requires the auth header for a user.
+    '''
+    def get(self):
+        userAuthCode = request.headers.get('User-Auth-Key')
+        if not userAuthCode:
+            return APIConstants.bad_end('No user auth provided!')
+        
+        decryptedSession = None
+        try:
+            decryptedSession = SessionData.AES.decrypt(userAuthCode)
+        except:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+        if not decryptedSession:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+
+        session = SessionData.checkSession(decryptedSession)
+        if session.get('active') != True:
+            return APIConstants.bad_end('Invalid user session!')
+        
+        userId = session.get('id', 0)
+
+        cards = UserData.getCards(int(userId))
+        if not cards:
+            return APIConstants.bad_end('No cards found.')
+        
+        returnCards = []
+        for card in cards:
+            returnCards.append({
+                'id': card,
+                'encoded': CardCipher.encode(card)
+            })
+
+        return {
+            'status': 'success',
+            'cards': returnCards
         }
 
 class getGameProfile(Resource):

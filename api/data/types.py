@@ -13,6 +13,11 @@ class User(Base):
     banned = Column(Boolean)
     data = Column(LargeBinary)
 
+class Card(Base):
+    __tablename__ = 'card'
+    id = Column(Integer, primary_key=True)
+    userid = Column(Integer)
+
 class News(Base):
     __tablename__ = 'news'
     id = Column(Integer, primary_key=True)
