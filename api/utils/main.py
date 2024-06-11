@@ -9,6 +9,7 @@ import yaml
 from api.data.mysql import MySQLBase
 
 # Services
+from api.services.arcade import Arcades, Paseli
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
 from api.services.user import getUserAccount, userCards, getGameProfile
@@ -25,6 +26,10 @@ class restfulTop(Resource):
 
 # Base keep-alive
 api.add_resource(restfulTop, '/')
+
+# Arcades
+api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
+api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
 
 # News
 api.add_resource(getAllNews, '/v1/news/getAllNews')

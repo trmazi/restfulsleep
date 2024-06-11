@@ -2,8 +2,10 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
+from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.session import SessionData
+from api.data.endpoints.game import GameData
 
 from api.data.card import CardCipher
 
@@ -36,6 +38,16 @@ class getUserAccount(Resource):
         if discordLink.get('linked', False):
             avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
 
+        profiles = GameData.getUserGameSettings(userId)
+
+        arcades = []
+        if authUser:
+            for arcade in ArcadeData.getUserArcades(userId):
+                arcades.append({
+                    'id': arcade,
+                    'name': ArcadeData.getArcadeName(arcade)
+                })
+
         return {
             'status': 'success',
             'user': {
@@ -46,6 +58,8 @@ class getUserAccount(Resource):
                 'banned': user['banned'],
                 'avatar': avatar,
                 'data': user['data'] if authUser else None,
+                'profiles': profiles,
+                'arcades': arcades
             }
         }
     
