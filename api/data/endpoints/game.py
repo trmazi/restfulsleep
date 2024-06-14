@@ -1,6 +1,6 @@
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
-from api.data.types import GameSettings
+from api.data.types import GameSettings, Extid
 
 class GameData:   
     def getUserGameSettings(userId: int) -> dict:
@@ -13,3 +13,44 @@ class GameData:
                     'game': game.game,
                     'data': JsonEncoded.deserialize(game.data)
                 } for game in games]
+            
+    def getUserGameStats(game: str, userId: int) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            game = session.query(GameSettings.data).filter(
+                GameSettings.userid == userId,
+                GameSettings.game == game
+            ).first()
+
+            if game is None:
+                return None
+            else:
+                return JsonEncoded.deserialize(game.data)
+            
+    def getAllGameStats(game: str) -> tuple[int, dict]:
+        with MySQLBase.SessionLocal() as session:
+            games = session.query(GameSettings).filter(
+                GameSettings.game == game
+            ).all()
+
+            if games is None:
+                return None
+            else:
+                return [(game.userid, JsonEncoded.deserialize(game.data)) for game in games]
+            
+    def getUserExtid(game: str, userId: int):
+        with MySQLBase.SessionLocal() as session:
+            extid = session.query(Extid.extid).filter(Extid.game == game, Extid.userid == userId).first()
+            
+            if extid is None:
+                return None
+            else:
+                return int(extid.extid)
+            
+    def getAllExtid(game: str) -> tuple[int, int]:
+        with MySQLBase.SessionLocal() as session:
+            extIds = session.query(Extid).filter(Extid.game == game).all()
+            
+            if extIds is None:
+                return None
+            else:
+                return [(int(extId.userid), int(extId.extid)) for extId in extIds]

@@ -11,5 +11,6 @@ class getNews(Resource):
     def get(self, newsId):
         data = NewsData.getNews(newsId)
         return {
+            'status': 'success',
             'news': data
         }, 200

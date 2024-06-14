@@ -20,7 +20,7 @@ class JsonEncoded():
                 # Could be serialized by us, could be a normal list.
                 if len(jd) >= 1 and jd[0] == '__bytes__':
                     # This is a serialized bytestring
-                    return bytes(jd[1:])
+                    return None
 
                 # Possibly one of these is a dictionary/list/serialized.
                 for i in range(len(jd)):
