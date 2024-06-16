@@ -16,6 +16,8 @@ class allPlayers(Resource):
         for profile in profiles:
             userId = profile.get('userId')
             profile['stats'] = stats.get(userId)
+            if profile['stats'] == None:
+                continue
             profile['extid'] = extIds.get(userId)
             data.append(profile)
 

@@ -35,7 +35,9 @@ class ProfileData:
                         profile_info = {
                             'userId': userId,
                             'maxVersion': refid_query.version,
-                            'username': rawData.get('username', rawData.get('name', ''))
+                            'username': rawData.get('username', rawData.get('name', '')),
+                            'sgrade': rawData.get('sgrade', None),
+                            'dgrade': rawData.get('dgrade', None)
                         }
                         latest_profiles.append(profile_info)
 
