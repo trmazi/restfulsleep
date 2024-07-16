@@ -14,6 +14,7 @@ from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
 from api.services.user import getUserAccount, userCards
 from api.services.profiles import allPlayers, Profile
+from api.services.score import Attempts, Records
 from api.services.share import shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
 app = Flask(__name__)
@@ -48,6 +49,10 @@ api.add_resource(userCards, '/v1/user/cards')
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')
 api.add_resource(Profile, '/v1/profile/<game>')
+
+# Scores
+api.add_resource(Attempts, '/v1/attempts')
+api.add_resource(Records, '/v1/records')
 
 # Video sharing API
 api.add_resource(shareServerStatus, '/share/server/status')

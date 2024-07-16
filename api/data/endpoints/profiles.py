@@ -37,7 +37,10 @@ class ProfileData:
                             'maxVersion': refid_query.version,
                             'username': rawData.get('username', rawData.get('name', '')),
                             'sgrade': rawData.get('sgrade', None),
-                            'dgrade': rawData.get('dgrade', None)
+                            'dgrade': rawData.get('dgrade', None),
+                            'jubility': (rawData.get('jubility', 0)) / 10,
+                            'profile_skill': (rawData.get('profile_skill', 0)) / 100,
+                            'skill': (rawData.get('skill', 0)) / 100,
                         }
                         latest_profiles.append(profile_info)
 

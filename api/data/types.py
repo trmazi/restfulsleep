@@ -129,14 +129,9 @@ class News(Base):
     body = Column(String)
     data = Column(LargeBinary)
 
-class User(Base):
-    __tablename__ = 'user'
-    id = Column(Integer, primary_key=True)
-    username = Column(String(255), unique=True)
-    email = Column(String(255))
-    password = Column(String(255))
-    admin = Column(Boolean)
-    banned = Column(Boolean)
+class Profile(Base):
+    __tablename__ = 'profile'
+    refid = Column(String(255), ForeignKey('refid.refid'), primary_key=True)
     data = Column(LargeBinary)
 
 class Refid(Base):
@@ -146,9 +141,26 @@ class Refid(Base):
     game = Column(String(255))
     version = Column(Integer)
 
-class Profile(Base):
-    __tablename__ = 'profile'
-    refid = Column(String(255), ForeignKey('refid.refid'), primary_key=True)
+class Score(Base):
+    __tablename__ = 'score'
+    id = Column(Integer, primary_key=True)
+    userid = Column(Integer)
+    musicid = Column(Integer, primary_key=True)
+    points = Column(Integer)
+    timestamp = Column(Integer)
+    update = Column(Integer)
+    lid = Column(Integer, primary_key=True)
+    data = Column(LargeBinary)
+
+class Attempt(Base):
+    __tablename__ = 'score_history'
+    id = Column(Integer, primary_key=True)
+    userid = Column(Integer)
+    musicid = Column(Integer, primary_key=True)
+    points = Column(Integer)
+    timestamp = Column(Integer)
+    new_record = Column(Boolean)
+    lid = Column(Integer, primary_key=True)
     data = Column(LargeBinary)
 
 class Session(Base):
@@ -157,3 +169,13 @@ class Session(Base):
     id = Column(Integer)
     type = Column(String(255))
     expiration = Column(Integer)
+
+class User(Base):
+    __tablename__ = 'user'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(255), unique=True)
+    email = Column(String(255))
+    password = Column(String(255))
+    admin = Column(Boolean)
+    banned = Column(Boolean)
+    data = Column(LargeBinary)
