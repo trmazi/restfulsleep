@@ -14,6 +14,7 @@ from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
 from api.services.user import getUserAccount, userCards
 from api.services.profiles import allPlayers, Profile
+from api.services.music import Music
 from api.services.score import Attempts, Records
 from api.services.share import shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
@@ -49,6 +50,9 @@ api.add_resource(userCards, '/v1/user/cards')
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')
 api.add_resource(Profile, '/v1/profile/<game>')
+
+# Music DB Data
+api.add_resource(Music, '/v1/music')
 
 # Scores
 api.add_resource(Attempts, '/v1/attempts')
