@@ -7,7 +7,6 @@ class MusicData:
     def getAllMusic(game: str = None, version: int = None, limit: int = None, chart: int = None, song_ids: list[int] = None) -> list[dict]:
         with MySQLBase.SessionLocal() as session:
             # Get the list of songs for a game or version
-            print(song_ids)
             musicQuery = (
                 session.query(Music)
                 .filter(Music.game == game, Music.version == version, Music.songid.in_(song_ids) if song_ids else True, Music.chart == chart if chart else True)

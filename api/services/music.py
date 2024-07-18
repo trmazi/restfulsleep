@@ -8,7 +8,7 @@ class Music(Resource):
     def get(self):
         game = request.args.get('game')
         version = request.args.get('version')
-        songIds = request.args.get('songIds')
+        songIds = request.headers.get('songIds')
         oneChart = request.args.get('oneChart')
 
         if not version:
