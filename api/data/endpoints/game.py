@@ -1,3 +1,4 @@
+import concurrent.futures
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import GameSettings, Extid
@@ -26,16 +27,23 @@ class GameData:
             else:
                 return JsonEncoded.deserialize(game.data)
             
+    def deserialize_game_data(game):
+        return game.userid, JsonEncoded.deserialize(game.data)
+            
     def getAllGameStats(game: str) -> tuple[int, dict]:
         with MySQLBase.SessionLocal() as session:
-            games = session.query(GameSettings).filter(
-                GameSettings.game == game
-            ).all()
+            games = session.query(GameSettings.userid, GameSettings.data).filter(
+            GameSettings.game == game
+        ).all()
 
-            if games is None:
-                return None
-            else:
-                return [(game.userid, JsonEncoded.deserialize(game.data)) for game in games]
+        if not games:
+            return []
+
+        # Use ThreadPoolExecutor for parallel processing of deserialization
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            results = list(executor.map(GameData.deserialize_game_data, games))
+
+        return results
             
     def getUserExtid(game: str, userId: int):
         with MySQLBase.SessionLocal() as session:

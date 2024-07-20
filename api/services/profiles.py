@@ -1,11 +1,20 @@
 from flask_restful import Resource
 from flask import request
+import concurrent.futures
 
 from api.constants import APIConstants
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
 
 class allPlayers(Resource):
+    def process_profile(self, profile, extIds, stats):
+        userId = profile.get('userId')
+        profile['stats'] = stats.get(userId)
+        if profile['stats'] is None:
+            return None
+        profile['extid'] = extIds.get(userId)
+        return profile
+
     def get(self, game: str):
         data = []
 
@@ -13,13 +22,12 @@ class allPlayers(Resource):
         extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
         stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
 
-        for profile in profiles:
-            userId = profile.get('userId')
-            profile['stats'] = stats.get(userId)
-            if profile['stats'] == None:
-                continue
-            profile['extid'] = extIds.get(userId)
-            data.append(profile)
+        with concurrent.futures.ProcessPoolExecutor() as executor:
+            futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
+            for future in concurrent.futures.as_completed(futures):
+                result = future.result()
+                if result is not None:
+                    data.append(result)
 
         return {
             'status': 'success',
