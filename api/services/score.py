@@ -12,7 +12,7 @@ class Records(Resource):
     
 class Attempts(Resource):
     def get(self):
-        data = ScoreData.getAllRecords(game = 'ddr', version = 18)
+        data = ScoreData.getAllAttempts(game = 'ddr', version = 18)
         return {
             'status': 'success',
             'songs': data

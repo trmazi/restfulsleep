@@ -2,6 +2,8 @@ from api.data.mysql import MySQLBase
 from api.data.types import Music, Attempt, Score
 from api.data.json import JsonEncoded
 
+from api.data.endpoints.music import MusicData
+
 class ScoreData:
     @staticmethod
     def getAllRecords(game: str = None, version: int = None, userId: int = None, machineId: int = None, limit: int = 1) -> dict:
@@ -71,37 +73,33 @@ class ScoreData:
             return songs
         
     @staticmethod
-    def getAllAttempts(game: str = None, version: str = None, userId: int = None, machineId: int = None, limit: int = 5) -> dict:
+    def getAllAttempts(game: str, version: int = None, userId: int = None, machineId: int = None) -> list[dict]:
+        allMusic = MusicData.getAllMusic(game, version)
+        db_ids = [music['db_id'] for music in allMusic]
+        music_dict = {music['db_id']: music for music in allMusic}
+        attempts = []
+
         with MySQLBase.SessionLocal() as session:
-            # Build the base query with joins
             query = (
-                session.query(Attempt, Music)
-                .join(Music, Attempt.musicid == Music.id)
-                .filter(Music.game == game, Music.version == version)
+                session.query(Attempt)
+                .filter(Attempt.musicid.in_(db_ids))
+                .order_by(Attempt.timestamp.desc())
+                .limit(500)
             )
-            
+
             # Apply additional filters if provided
             if userId is not None:
                 query = query.filter(Attempt.userid == userId)
             if machineId is not None:
                 query = query.filter(Attempt.lid == machineId)
 
-            # Order by song id and timestamp, and limit results
-            query = query.order_by(Music.songid.desc(), Attempt.timestamp.desc()).limit(limit)
-            
             # Execute the query and fetch the results
             results = query.all()
-            
-            # Transform the results into the desired format
-            scores = []
-            for attempt, song in results:
-                scores.append(
+            for attempt in results:
+                songData = music_dict.get(attempt.musicid, {})
+                attempts.append(
                     {
-                        'song': {
-                            'id': song.id,
-                            'name': song.name,
-                            'artist': song.artist,
-                        },
+                        'song': songData,
                         'timestamp': attempt.timestamp,
                         'userId': attempt.userid,
                         'musicId': attempt.musicid,
@@ -112,4 +110,5 @@ class ScoreData:
                     }
                 )
             
-            return scores
+            
+        return attempts

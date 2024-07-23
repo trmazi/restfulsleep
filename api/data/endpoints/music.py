@@ -17,6 +17,7 @@ class MusicData:
         musicData = []
         for song in result:
             musicData.append({
+                'db_id': song.id,
                 'id': song.songid,
                 'chart': song.chart,
                 'name': song.name,
