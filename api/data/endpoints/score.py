@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from typing import List, Dict
 from api.data.mysql import MySQLBase
 from api.data.types import Music, Attempt, Score
 from api.data.json import JsonEncoded
@@ -73,33 +75,29 @@ class ScoreData:
             return songs
         
     @staticmethod
-    def getAllAttempts(game: str, version: int = None, userId: int = None, machineId: int = None) -> list[dict]:
+    def getAllAttempts(game: str, version: int = None, userId: int = None, machineId: int = None) -> List[Dict]:
         allMusic = MusicData.getAllMusic(game, version)
         db_ids = [music['db_id'] for music in allMusic]
         music_dict = {music['db_id']: music for music in allMusic}
-        attempts = []
 
-        with MySQLBase.SessionLocal() as session:
-            query = (
-                session.query(Attempt)
-                .filter(Attempt.musicid.in_(db_ids))
-                .order_by(Attempt.timestamp.desc())
-                .limit(500)
-            )
+        def fetch_attempts(batch_db_ids):
+            with MySQLBase.SessionLocal() as session:
+                query = (
+                    session.query(Attempt)
+                    .filter(Attempt.musicid.in_(batch_db_ids))
+                    .order_by(Attempt.timestamp.desc())
+                    .limit(100)
+                )
 
-            # Apply additional filters if provided
-            if userId is not None:
-                query = query.filter(Attempt.userid == userId)
-            if machineId is not None:
-                query = query.filter(Attempt.lid == machineId)
+                if userId is not None:
+                    query = query.filter(Attempt.userid == userId)
+                if machineId is not None:
+                    query = query.filter(Attempt.lid == machineId)
 
-            # Execute the query and fetch the results
-            results = query.all()
-            for attempt in results:
-                songData = music_dict.get(attempt.musicid, {})
-                attempts.append(
+                results = query.all()
+                return [
                     {
-                        'song': songData,
+                        'song': music_dict.get(attempt.musicid, {}),
                         'timestamp': attempt.timestamp,
                         'userId': attempt.userid,
                         'musicId': attempt.musicid,
@@ -108,7 +106,21 @@ class ScoreData:
                         'newRecord': bool(attempt.new_record),
                         'data': JsonEncoded.deserialize(attempt.data),
                     }
-                )
-            
-            
+                    for attempt in results
+                ]
+
+        # Split db_ids into chunks
+        batch_size = len(db_ids) // 8 + 1
+        db_id_batches = [db_ids[i:i + batch_size] for i in range(0, len(db_ids), batch_size)]
+
+        attempts = []
+        
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(fetch_attempts, batch) for batch in db_id_batches]
+            for future in as_completed(futures):
+                attempts.extend(future.result())
+
+        # Sort results by timestamp (newest first)
+        attempts.sort(key=lambda x: x['timestamp'], reverse=True)
+        
         return attempts
