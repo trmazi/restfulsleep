@@ -86,7 +86,6 @@ class ScoreData:
                     session.query(Attempt)
                     .filter(Attempt.musicid.in_(batch_db_ids))
                     .order_by(Attempt.timestamp.desc())
-                    .limit(100)
                 )
 
                 if userId is not None:
@@ -94,7 +93,7 @@ class ScoreData:
                 if machineId is not None:
                     query = query.filter(Attempt.lid == machineId)
 
-                results = query.all()
+                results = query.limit(100).all()
                 return [
                     {
                         'song': music_dict.get(attempt.musicid, {}),
@@ -110,12 +109,12 @@ class ScoreData:
                 ]
 
         # Split db_ids into chunks
-        batch_size = len(db_ids) // 8 + 1
+        batch_size = len(db_ids) // 12 + 1
         db_id_batches = [db_ids[i:i + batch_size] for i in range(0, len(db_ids), batch_size)]
 
         attempts = []
         
-        with ThreadPoolExecutor(max_workers=8) as executor:
+        with ThreadPoolExecutor(max_workers=12) as executor:
             futures = [executor.submit(fetch_attempts, batch) for batch in db_id_batches]
             for future in as_completed(futures):
                 attempts.extend(future.result())

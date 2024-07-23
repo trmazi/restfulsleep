@@ -55,7 +55,7 @@ api.add_resource(Profile, '/v1/profile/<game>')
 api.add_resource(Music, '/v1/music')
 
 # Scores
-api.add_resource(Attempts, '/v1/attempts')
+api.add_resource(Attempts, '/v1/attempts/<game>')
 api.add_resource(Records, '/v1/records')
 
 # Video sharing API

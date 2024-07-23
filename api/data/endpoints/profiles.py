@@ -45,7 +45,6 @@ class ProfileData:
                         latest_profiles.append(profile_info)
 
             return latest_profiles
-
         
     def getProfile(game: str, version: int, userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:
