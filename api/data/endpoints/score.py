@@ -109,12 +109,12 @@ class ScoreData:
                 ]
 
         # Split db_ids into chunks
-        batch_size = len(db_ids) // 6 + 1
+        batch_size = len(db_ids) // 8 + 1
         db_id_batches = [db_ids[i:i + batch_size] for i in range(0, len(db_ids), batch_size)]
 
         attempts = []
         
-        with ThreadPoolExecutor(max_workers=6) as executor:
+        with ThreadPoolExecutor(max_workers=8) as executor:
             futures = [executor.submit(fetch_attempts, batch) for batch in db_id_batches]
             for future in as_completed(futures):
                 attempts.extend(future.result())
