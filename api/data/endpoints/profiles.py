@@ -46,24 +46,46 @@ class ProfileData:
 
             return latest_profiles
         
-    def getProfile(game: str, version: int, userId: int) -> dict:
+    def getProfile(game: str, version: int, userId: int, noData: bool = False) -> dict:
         with MySQLBase.SessionLocal() as session:
-            refid_query = session.query(Refid).filter(
-                Refid.userId == userId,
-                Refid.game == game,
-                Refid.version == version
-            ).first()
 
-            if refid_query:
-                profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
+            profile = None
+            if version:
+                refid_query = session.query(Refid).filter(
+                    Refid.userId == userId,
+                    Refid.game == game,
+                    Refid.version == version
+                ).first()
 
-                if profile:
-                    rawData = JsonEncoded.deserialize(profile.data)
+                if refid_query:
+                    profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
+            else:
+                refid_query = session.query(Refid).filter(
+                    Refid.userId == userId,
+                    Refid.game == game,
+                ).all()
+
+                if refid_query:
+                    profile = session.query(Profile).filter(Profile.refid == refid_query[-1].refid).first()
+
+            if profile:
+                rawData = JsonEncoded.deserialize(profile.data)
+                if not noData:
                     return {
                         'userId': userId,
-                        'username': rawData.get('username', rawData.get('name', '')),
-                        **rawData,
+                        'username': rawData.get('username', rawData.get('name', ''))
                     }
+                else:
+                    return {
+                        'userId': userId,
+                        'username': rawData.get('username', rawData.get('name', ''))
+                    }
+                
+            print(userId)
+            return {
+                'userId': 0,
+                'username': ''
+            }
                 
     def getVersions(game: str, userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:

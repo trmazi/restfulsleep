@@ -5,6 +5,7 @@ from api.data.types import Music, Attempt, Score
 from api.data.json import JsonEncoded
 
 from api.data.endpoints.music import MusicData
+from api.data.endpoints.profiles import ProfileData
 
 class ScoreData:
     @staticmethod
@@ -99,6 +100,7 @@ class ScoreData:
                         'song': music_dict.get(attempt.musicid, {}),
                         'timestamp': attempt.timestamp,
                         'userId': attempt.userid,
+                        'username': ProfileData.getProfile(game, version, attempt.userid, True).get('username', ''),
                         'musicId': attempt.musicid,
                         'machineId': attempt.lid,
                         'points': attempt.points,
