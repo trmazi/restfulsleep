@@ -81,7 +81,6 @@ class ProfileData:
                         'username': rawData.get('username', rawData.get('name', ''))
                     }
                 
-            print(userId)
             return {
                 'userId': 0,
                 'username': ''
