@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy import distinct
 from api.data.mysql import MySQLBase
 from api.data.types import Profile, Refid
@@ -19,9 +20,8 @@ class ProfileData:
                 ).all()
                 userIds.update(userId for (userId,) in version_userIds)
 
-            # Step 2: Get the latest profile information for each user
-            latest_profiles = []
-            for userId in userIds:
+        def fetch_latest_profile(userId: int) -> Dict[str, Any]:
+            with MySQLBase.SessionLocal() as session:
                 refid_query = session.query(Refid).filter(
                     Refid.userId == userId,
                     Refid.game == game
@@ -32,7 +32,7 @@ class ProfileData:
 
                     if profile:
                         rawData = JsonEncoded.deserialize(profile.data)
-                        profile_info = {
+                        return {
                             'userId': userId,
                             'maxVersion': refid_query.version,
                             'username': rawData.get('username', rawData.get('name', '')),
@@ -42,9 +42,18 @@ class ProfileData:
                             'profile_skill': (rawData.get('profile_skill', 0)) / 100,
                             'skill': (rawData.get('skill', 0)) / 100,
                         }
-                        latest_profiles.append(profile_info)
+            return None
 
-            return latest_profiles
+        # Step 2: Get the latest profile information for each user in parallel
+        latest_profiles = []
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(fetch_latest_profile, userId) for userId in userIds]
+            for future in as_completed(futures):
+                profile_info = future.result()
+                if profile_info:
+                    latest_profiles.append(profile_info)
+
+        return latest_profiles
         
     def getProfile(game: str, version: int, userId: int, noData: bool = False) -> dict:
         with MySQLBase.SessionLocal() as session:
@@ -73,7 +82,7 @@ class ProfileData:
                 if not noData:
                     return {
                         'userId': userId,
-                        'username': rawData.get('username', rawData.get('name', ''))
+                        'username': rawData.get('username', rawData.get('name', '')),
                         **rawData
                     }
                 else:
