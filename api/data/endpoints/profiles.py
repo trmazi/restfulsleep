@@ -74,6 +74,7 @@ class ProfileData:
                     return {
                         'userId': userId,
                         'username': rawData.get('username', rawData.get('name', ''))
+                        **rawData
                     }
                 else:
                     return {
