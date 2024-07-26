@@ -46,7 +46,7 @@ class ProfileData:
 
         # Step 2: Get the latest profile information for each user in parallel
         latest_profiles = []
-        with ThreadPoolExecutor(max_workers=8) as executor:
+        with ThreadPoolExecutor(max_workers=10) as executor:
             futures = [executor.submit(fetch_latest_profile, userId) for userId in userIds]
             for future in as_completed(futures):
                 profile_info = future.result()
