@@ -12,7 +12,7 @@ class MusicData:
         cache_lifetime = 1440 * 60  # 10 minutes in seconds
 
         # Check if the cache file exists and if it's recent
-        if os.path.exists(cache_file) and len(song_ids):
+        if os.path.exists(cache_file) and song_ids:
             file_age = time.time() - os.path.getmtime(cache_file)
             if file_age < cache_lifetime:
                 # Load and return cached data
@@ -51,7 +51,7 @@ class MusicData:
                 })
 
         # Cache the result data for faster reads
-        if not len(song_ids):
+        if not song_ids:
             with open(cache_file, 'wb') as out_file:
                 pickle.dump((time.time(), musicData), out_file)
 
