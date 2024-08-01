@@ -91,10 +91,7 @@ class ProfileData:
                         'username': rawData.get('username', rawData.get('name', ''))
                     }
                 
-            return {
-                'userId': 0,
-                'username': ''
-            }
+            return None
                 
     def getVersions(game: str, userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:
