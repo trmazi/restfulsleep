@@ -16,15 +16,19 @@ class ProfileData:
             for version in versions:
                 version_userIds = session.query(Refid.userId).filter(
                     Refid.game == game,
-                    Refid.version == version[0]
+                    Refid.version == version[0],
+                    (Refid.version < 10000) | (Refid.version >= 20000)  # Exclude versions with the bump
                 ).all()
-                userIds.update(userId for (userId,) in version_userIds)
+
+                filtered_userIds = (userId for (userId,) in version_userIds)
+                userIds.update(filtered_userIds)
 
         def fetch_latest_profile(userId: int) -> Dict[str, Any]:
             with MySQLBase.SessionLocal() as session:
                 refid_query = session.query(Refid).filter(
                     Refid.userId == userId,
-                    Refid.game == game
+                    Refid.game == game,
+                    (Refid.version < 10000)  # Exclude versions with the bump
                 ).order_by(Refid.version.desc()).first()
 
                 if refid_query:
@@ -72,6 +76,7 @@ class ProfileData:
                 refid_query = session.query(Refid).filter(
                     Refid.userId == userId,
                     Refid.game == game,
+                    (Refid.version < 10000)
                 ).all()
 
                 if refid_query:
@@ -98,6 +103,7 @@ class ProfileData:
             refid_query = session.query(Refid.version).filter(
                 Refid.userId == userId,
                 Refid.game == game,
+                (Refid.version < 10000)
             ).all()
 
             if refid_query:
