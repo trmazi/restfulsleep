@@ -1,5 +1,5 @@
 from flask_restful import Resource
-from flask import request
+from flask import request, Response
 
 from api.constants import APIConstants
 from api.data.endpoints.arcade import ArcadeData
@@ -7,11 +7,12 @@ from api.data.endpoints.machine import MachineData
 from api.data.endpoints.paseli import PaseliData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.session import SessionData
+from api.data.endpoints.pfsense import PFSenseData
 
 class Arcades(Resource):
     '''
     Handle loading, creation, and updating of an arcade.
-    Requires a valid user session and that a user owns an arcade.
+    Requires a valid user session and that a user owns an arcade (or if user is admin).
     '''
     def get(self, arcadeId: int):
         userAuthCode = request.headers.get('User-Auth-Key')
@@ -31,8 +32,9 @@ class Arcades(Resource):
             return APIConstants.bad_end('Invalid user session!')
         
         userId = session.get('id', 0)
+        user = UserData.getUser(userId)
 
-        if not ArcadeData.checkOwnership(userId, arcadeId):
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
             return APIConstants.bad_end('You don\'t own this arcade or it doesn\'t exist!')
         
         arcade = ArcadeData.getArcade(arcadeId)
@@ -61,6 +63,49 @@ class Arcades(Resource):
         
         return {'status': 'success', 'arcade': arcade}
     
+class VPN(Resource):
+    '''
+    Handle exporting of an arcade's VPN profile.
+    Requires a valid user session and that a user owns an arcade (or if user is admin).
+    '''
+    def get(self, arcadeId: int):
+        userAuthCode = request.headers.get('User-Auth-Key')
+        if not userAuthCode:
+            return APIConstants.bad_end('No user auth provided!')
+        
+        decryptedSession = None
+        try:
+            decryptedSession = SessionData.AES.decrypt(userAuthCode)
+        except:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+        if not decryptedSession:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+
+        session = SessionData.checkSession(decryptedSession)
+        if session.get('active') != True:
+            return APIConstants.bad_end('Invalid user session!')
+        
+        userId = session.get('id', 0)
+        user = UserData.getUser(userId)
+
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
+            return APIConstants.bad_end('You don\'t own this arcade or it doesn\'t exist!')
+        
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+
+        arcade_config = PFSenseData.export_vpn_profile(arcade)
+        
+        if arcade_config:
+            return Response(
+                arcade_config[0],
+                mimetype="text/plain",
+                headers={"Content-Disposition": f"attachment;filename=gradius-{arcade_config[1]}-phaseii-config.ovpn"}
+            )
+        else:
+            return APIConstants.bad_end('Failed to export!')
+    
 class Paseli(Resource):
     '''
     Handle loading and updating of PASELI information.
@@ -83,8 +128,9 @@ class Paseli(Resource):
             return APIConstants.bad_end('Invalid user session!')
         
         userId = session.get('id', 0)
+        user = UserData.getUser(userId)
 
-        if not ArcadeData.checkOwnership(userId, arcadeId):
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
             return APIConstants.bad_end('You don\'t own this arcade or it doesn\'t exist!')
         
         returnData = {}

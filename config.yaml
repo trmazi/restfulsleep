@@ -1,6 +1,11 @@
 database:
-  db: your_database_name
-  user: your_username
-  pass: your_password
+  db: bemanidev
+  user: bemani
+  pass: bemani
+
+pfsense:
+    server: https://10.5.7.1/api/v1
+    client-id: 61646d696e
+    client-key: 35f847a06788f8f3389fd42909de9910
 
 record_cache_dir: '/tmp'

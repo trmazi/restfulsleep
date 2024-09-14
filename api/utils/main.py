@@ -8,8 +8,12 @@ import yaml
 # DB Stuff
 from api.data.mysql import MySQLBase
 
+# PFSense Stuff
+from api.data.endpoints.pfsense import PFSenseData
+
 # Services
-from api.services.arcade import Arcades, Paseli
+from api.services.discord import OnboardingVPN
+from api.services.arcade import Arcades, Paseli, VPN
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
 from api.services.user import getUserAccount, userCards
@@ -33,6 +37,10 @@ api.add_resource(restfulTop, '/')
 # Arcades
 api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
 api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
+api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')
+
+# BadManiac Calls
+api.add_resource(OnboardingVPN, '/v1/discord/exportVPN/<arcadeId>')
 
 # News
 api.add_resource(getAllNews, '/v1/news/getAllNews')
@@ -75,6 +83,10 @@ def load_config(filename: str) -> None:
     db_config = config.get('database', {})
     if db_config:
         MySQLBase.update_connection(db_config)
+
+    pf_config = config.get('pfsense', {})
+    if pf_config:
+        PFSenseData.update_config(pf_config)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
