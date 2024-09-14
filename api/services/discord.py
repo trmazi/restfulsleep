@@ -48,7 +48,7 @@ class OnboardingVPN(Resource):
             if not discordId:
                 return APIConstants.bad_end('No Discord ID!')
 
-            file_content = ''.join(arcadeConfig[0]).encode('utf-8')
+            file_content = ''.join(list(arcadeConfig[0])).encode('utf-8')
             file_name = f"gradius-{arcadeConfig[1]}-phaseii-config.ovpn"
             files = {
                 'vpnFile': (file_name, BytesIO(file_content), 'text/plain')
