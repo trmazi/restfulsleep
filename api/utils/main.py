@@ -12,7 +12,7 @@ from api.data.mysql import MySQLBase
 from api.data.endpoints.pfsense import PFSenseData
 
 # Services
-from api.services.discord import OnboardingVPN
+from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.arcade import Arcades, Paseli, VPN
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
@@ -41,6 +41,7 @@ api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')
 
 # BadManiac Calls
 api.add_resource(OnboardingVPN, '/v1/discord/exportVPN/<arcadeId>')
+api.add_resource(OnboardingArcade, '/v1/discord/onboardArcade/<arcadeId>')
 
 # News
 api.add_resource(getAllNews, '/v1/news/getAllNews')

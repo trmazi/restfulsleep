@@ -12,12 +12,14 @@ class MachineData:
                 return [{
                     'id': int(machine.id),
                     'pcbId': machine.pcbid,
-                    'name': machine.name,
+                    'PCBID': machine.pcbid,
+                    'name': machine.description,
                     'description': machine.description,
                     'arcadeId': int(machine.arcadeid),
                     'port': str(machine.port),
                     'game': machine.game if machine.game else None,
                     'version': int(machine.version) if machine.version else None,
                     'ota': bool(machine.updaton),
+                    'cabinet': False,
                     'data': JsonEncoded.deserialize(machine.data)
                 } for machine in machines]

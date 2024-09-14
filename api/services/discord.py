@@ -1,10 +1,11 @@
 import requests
 from io import BytesIO
 from flask_restful import Resource
-from flask import request, Response
+from flask import request
 
 from api.constants import APIConstants
 from api.data.endpoints.arcade import ArcadeData
+from api.data.endpoints.machine import MachineData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.session import SessionData
 from api.data.endpoints.pfsense import PFSenseData
@@ -69,3 +70,69 @@ class OnboardingVPN(Resource):
         
         else:
             return APIConstants.bad_end('Failed to export!')
+        
+class OnboardingArcade(Resource):
+    '''
+    Handle onboarding messages sent to a Discord User.
+    Requires a valid user session and that a user is an admin.
+    '''
+    def get(self, arcadeId: int):
+        userAuthCode = request.headers.get('User-Auth-Key')
+        if not userAuthCode:
+            return APIConstants.bad_end('No user auth provided!')
+        
+        decryptedSession = None
+        try:
+            decryptedSession = SessionData.AES.decrypt(userAuthCode)
+        except:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+        if not decryptedSession:
+            return APIConstants.bad_end('Unable to decrypt SessionId!')
+
+        session = SessionData.checkSession(decryptedSession)
+        if session.get('active') != True:
+            return APIConstants.bad_end('Invalid user session!')
+        
+        userId = session.get('id', 0)
+        user = UserData.getUser(userId)
+        if not user.get("admin", False):
+            return APIConstants.bad_end('You are not an admin!')
+        
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+        
+        arcadeData = arcade.get("data", {})
+        
+        discordId = request.args.get('discordId')
+        if not discordId:
+            return APIConstants.bad_end('No Discord ID!')
+
+        request_data = {
+            "discordId": discordId,
+            "arcade": {
+                "id": arcade.get("id"),
+                "name": arcade.get("name"),
+                "description": arcade.get("description"),
+                "paseli": bool(arcadeData.get("paseli_enabled", False)),
+                "infinitePaseli": bool(arcadeData.get("paseli_infinite", False)),
+                "maintenance": bool(arcadeData.get("maint", False)),
+                "betas": bool(arcadeData.get("is_beta", False)),
+                "incognito": bool(arcadeData.get("hide_network", False)),
+                "machineList": MachineData.getArcadeMachines(arcadeId)
+            }
+        }
+
+        api_endpoint = f"http://10.5.7.20:8017/onboardArcade"
+
+        try:
+            response = requests.post(api_endpoint, json=request_data)
+
+            if response.status_code == 200:
+                return {'status': 'success', 'data': request_data}
+            else:
+                return APIConstants.bad_end(f"Failed to onboard. Status code: {response.status_code}")
+        
+        except requests.RequestException as e:
+            return APIConstants.bad_end(f"Error during onboard: {str(e)}")
+        
