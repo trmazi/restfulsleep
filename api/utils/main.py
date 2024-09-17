@@ -13,7 +13,8 @@ from api.data.endpoints.pfsense import PFSenseData
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.arcade import Arcades, Paseli, VPN
+from api.services.admin import OnboardArcade
+from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession
 from api.services.user import getUserAccount, userCards
@@ -34,10 +35,15 @@ class restfulTop(Resource):
 # Base keep-alive
 api.add_resource(restfulTop, '/')
 
+# Admin
+api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
+
 # Arcades
 api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
 api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
 api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')
+api.add_resource(CheckArcadeName, '/v1/arcade/checkName')
+api.add_resource(CheckPCBID, '/v1/arcade/checkPCBID')
 
 # BadManiac Calls
 api.add_resource(OnboardingVPN, '/v1/discord/exportVPN/<arcadeId>')

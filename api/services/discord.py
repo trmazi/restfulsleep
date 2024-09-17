@@ -4,10 +4,9 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
+from api.precheck import RequestPreCheck
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
-from api.data.endpoints.user import UserData
-from api.data.endpoints.session import SessionData
 from api.data.endpoints.pfsense import PFSenseData
 
 class OnboardingVPN(Resource):
@@ -16,26 +15,13 @@ class OnboardingVPN(Resource):
     Requires a valid user session and that a user is an admin.
     '''
     def get(self, arcadeId: int):
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return APIConstants.bad_end('No user auth provided!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-
-        session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return APIConstants.bad_end('Invalid user session!')
-        
-        userId = session.get('id', 0)
-        user = UserData.getUser(userId)
-        if not user.get("admin", False):
-            return APIConstants.bad_end('You are not an admin!')
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
         
         arcade = ArcadeData.getArcade(arcadeId)
         if not arcade:
@@ -76,26 +62,13 @@ class OnboardingArcade(Resource):
     Requires a valid user session and that a user is an admin.
     '''
     def get(self, arcadeId: int):
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return APIConstants.bad_end('No user auth provided!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-
-        session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return APIConstants.bad_end('Invalid user session!')
-        
-        userId = session.get('id', 0)
-        user = UserData.getUser(userId)
-        if not user.get("admin", False):
-            return APIConstants.bad_end('You are not an admin!')
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
         
         arcade = ArcadeData.getArcade(arcadeId)
         if not arcade:

@@ -2,6 +2,7 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
+from api.precheck import RequestPreCheck
 from api.data.endpoints.session import SessionData
 from api.data.endpoints.user import UserData
 
@@ -35,23 +36,10 @@ class checkUserSession(Resource):
         '''
         Given a user's session id, check if it's in the db.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
-        session_id = data.get('sessionId', None)
-        if session_id == None:
-            return APIConstants.bad_end('No sessionId was sent!')
-        
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(session_id)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        
-        session = SessionData.checkSession(decryptedSession)
         return {'status': 'success', 'activeSession': session.get('active', False), 'userId': session.get('id', 0)}
 
 class deleteUserSession(Resource):

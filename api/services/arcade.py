@@ -1,12 +1,12 @@
 from flask_restful import Resource
-from flask import request, Response
+from flask import Response, request
 
 from api.constants import APIConstants
+from api.precheck import RequestPreCheck
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
 from api.data.endpoints.paseli import PaseliData
 from api.data.endpoints.user import UserData
-from api.data.endpoints.session import SessionData
 from api.data.endpoints.pfsense import PFSenseData
 
 class Arcades(Resource):
@@ -15,21 +15,9 @@ class Arcades(Resource):
     Requires a valid user session and that a user owns an arcade (or if user is admin).
     '''
     def get(self, arcadeId: int):
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return APIConstants.bad_end('No user auth provided!')
-        
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-
-        session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return APIConstants.bad_end('Invalid user session!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
         userId = session.get('id', 0)
         user = UserData.getUser(userId)
@@ -69,21 +57,9 @@ class VPN(Resource):
     Requires a valid user session and that a user owns an arcade (or if user is admin).
     '''
     def get(self, arcadeId: int):
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return APIConstants.bad_end('No user auth provided!')
-        
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-
-        session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return APIConstants.bad_end('Invalid user session!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
         userId = session.get('id', 0)
         user = UserData.getUser(userId)
@@ -111,21 +87,9 @@ class Paseli(Resource):
     Handle loading and updating of PASELI information.
     '''
     def get(self, arcadeId: int):
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return APIConstants.bad_end('No user auth provided!')
-        
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
-
-        session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return APIConstants.bad_end('Invalid user session!')
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
         
         userId = session.get('id', 0)
         user = UserData.getUser(userId)
@@ -152,3 +116,52 @@ class Paseli(Resource):
             returnData['transactions'] = transactions
         
         return {'status': 'success', 'data': returnData}
+    
+class CheckArcadeName(Resource):
+    '''
+    Check if an arcade name has been taken
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        name = request.args.get('name')
+        if not name:
+            return APIConstants.bad_end('No name provided!')
+        
+        validArcade = True
+        if ArcadeData.fromName(name):
+            validArcade = False
+        
+        return {'status': 'success', 'unused': validArcade}
+
+class CheckPCBID(Resource):
+    '''
+    Check if PCBID has been taken
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        pcbid = request.args.get('PCBID')
+        if not pcbid:
+            return APIConstants.bad_end('No PCBID provided!')
+        
+        if len(pcbid) != 20:
+            return APIConstants.bad_end('PCBID must be 20 characters!')
+        
+        validArcade = True
+        if MachineData.fromPCBID(pcbid):
+            validArcade = False
+        
+        return {'status': 'success', 'unused': validArcade}

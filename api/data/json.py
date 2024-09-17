@@ -1,6 +1,13 @@
 from typing import Optional, Dict, Any
 import json
 
+class _BytesEncoder(json.JSONEncoder):
+    def default(self, obj: Any) -> Any:
+        if isinstance(obj, bytes):
+            # We're abusing lists here, we have a mixed type
+            return ['__bytes__'] + [b for b in obj]  # type: ignore
+        return json.JSONEncoder.default(self, obj)
+
 class JsonEncoded():
     def deserialize(data: Optional[str]) -> Dict[str, Any]:
         """
@@ -31,3 +38,9 @@ class JsonEncoded():
             return jd
 
         return fix(json.loads(data))
+    
+    def serialize(data: Dict[str, Any]) -> str:
+        """
+        Given an arbitrary dict, serialize it to JSON.
+        """
+        return json.dumps(data, cls=_BytesEncoder).encode('utf-8')

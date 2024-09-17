@@ -16,6 +16,61 @@ class ArcadeData:
                     'pin': int(arcade.pin),
                     'data': JsonEncoded.deserialize(arcade.data)
                 }
+
+    def putArcade(arcadeId: int = None, newArcade: dict = None):
+        if newArcade is None:
+            return None  # No data provided, return None
+        
+        # Check required fields
+        if 'name' not in newArcade or newArcade['name'] is None:
+            raise ValueError("Arcade 'name' is required and cannot be None")
+        
+        if 'pin' not in newArcade or newArcade['pin'] is None:
+            raise ValueError("Arcade 'pin' is required and cannot be None")
+        
+        with MySQLBase.SessionLocal() as session:
+            if arcadeId is not None:
+                arcade = session.query(Arcade).filter(Arcade.id == arcadeId).first()
+                if arcade is None:
+                    return None
+            else:
+                arcade = Arcade(
+                    name = newArcade.get('name'),
+                    description = newArcade.get('description'),
+                    pin = newArcade.get('pin'),
+                    data = JsonEncoded.serialize(newArcade.get('data', {}))
+                )
+                session.add(arcade)
+                session.flush()
+            
+            arcade.name = newArcade.get('name')
+            arcade.description = newArcade.get('description')
+            arcade.pin = newArcade.get('pin')
+            arcade.data = JsonEncoded.serialize(newArcade.get('data', {}))
+
+            session.commit()
+
+            return {
+                'id': int(arcade.id),
+                'name': arcade.name,
+                'description': arcade.description,
+                'pin': int(arcade.pin),
+                'data': JsonEncoded.deserialize(arcade.data)
+            }
+
+    def fromName(arcadeName: str):
+        with MySQLBase.SessionLocal() as session:
+            arcade = session.query(Arcade).filter(Arcade.name == arcadeName).first()
+            if arcade is None:
+                return None
+            else:
+                return {
+                    'id': int(arcade.id),
+                    'name': arcade.name,
+                    'description': arcade.description,
+                    'pin': int(arcade.pin),
+                    'data': JsonEncoded.deserialize(arcade.data)
+                }
             
     def getArcadeName(arcadeId: int):
         with MySQLBase.SessionLocal() as session:
