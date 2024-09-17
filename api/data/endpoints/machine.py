@@ -2,6 +2,8 @@ from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import Machine
 
+from sqlalchemy import text
+
 class MachineData:   
     def getArcadeMachines(arcadeId: int):
         with MySQLBase.SessionLocal() as session:
@@ -48,7 +50,7 @@ class MachineData:
             else:
                 if newMachine.get('port') is None:
                     while True:
-                        port_result = session.execute("SELECT MAX(port) AS port FROM machine").fetchone()
+                        port_result = session.execute(text("SELECT MAX(port) AS port FROM machine")).fetchone()
                         port = port_result['port'] + 1 if port_result['port'] is not None else 10000
                         
                         try:
