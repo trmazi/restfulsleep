@@ -50,8 +50,8 @@ class MachineData:
             else:
                 if newMachine.get('port') is None:
                     while True:
-                        port_result = session.execute(text("SELECT MAX(port) AS port FROM machine")).fetchone()
-                        port = port_result[0] + 1 if port_result[0] is not None else 10000
+                        port_result = session.execute("SELECT MAX(port) AS port FROM machine").fetchone()
+                        port = port_result['port'] + 1 if port_result['port'] is not None else 10000
                         
                         try:
                             machine = Machine(
