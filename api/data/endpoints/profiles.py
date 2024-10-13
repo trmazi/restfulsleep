@@ -84,6 +84,7 @@ class ProfileData:
 
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data)
+                rawData['machine_judge_adjust'] = None # Block exposing PCBIDs.
                 if not noData:
                     return {
                         'userId': userId,
