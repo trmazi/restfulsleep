@@ -9,7 +9,7 @@ class _BytesEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 class JsonEncoded():
-    def deserialize(data: Optional[str]) -> Dict[str, Any]:
+    def deserialize(data: Optional[str], include_bytes: bool = False) -> Dict[str, Any]:
         """
         Given a string, deserialize it from JSON.
         """
@@ -27,7 +27,8 @@ class JsonEncoded():
                 # Could be serialized by us, could be a normal list.
                 if len(jd) >= 1 and jd[0] == '__bytes__':
                     # This is a serialized bytestring
-                    return None
+                    if include_bytes:
+                        return bytes(jd[1:])
 
                 # Possibly one of these is a dictionary/list/serialized.
                 for i in range(len(jd)):

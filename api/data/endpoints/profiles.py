@@ -42,6 +42,9 @@ class ProfileData:
                             'username': rawData.get('username', rawData.get('name', '')),
                             'sgrade': rawData.get('sgrade', None),
                             'dgrade': rawData.get('dgrade', None),
+                            'block': rawData.get('block', None),
+                            'packet': rawData.get('packet', None),
+                            'skill_level': rawData.get('skill_level', None),
                             'jubility': (rawData.get('jubility', 0)) / 10,
                             'profile_skill': (rawData.get('profile_skill', 0)) / 100,
                             'skill': (rawData.get('skill', 0)) / 100,
@@ -109,3 +112,52 @@ class ProfileData:
 
             if refid_query:
                 return [refid.version for refid in refid_query]
+            
+    def updateProfile(game: str, version: int, userId: int, new_profile: dict) -> str | None:
+        profile = ProfileData.getProfile(game, version, userId)
+        if not profile:
+            return 'No profile found!'
+        
+        def update_data(existing_profile, new_data):
+            for key, value in new_data.items():
+                if isinstance(value, dict):
+                    if key == "usergamedata":
+                        continue
+
+                    if key not in existing_profile:
+                        existing_profile[key] = {}
+                    
+                    if isinstance(existing_profile[key], dict):
+                        update_data(existing_profile[key], value)
+                    else:
+                        return((None, f"Type mismatch for {key}: expected dict but got {type(value).__name__}"))
+                else:
+                    if key in existing_profile:
+                        if isinstance(existing_profile[key], type(value)):
+                            existing_profile[key] = value
+                        else:
+                            return((None, f"Type mismatch for {key}: expected {type(existing_profile[key]).__name__} but got {type(value).__name__}"))
+                    else:
+                        existing_profile[key] = value
+
+        with MySQLBase.SessionLocal() as session:
+            profile = None
+            refid_query = session.query(Refid).filter(
+                Refid.userId == userId,
+                Refid.game == game,
+                Refid.version == version
+            ).first()
+
+            if refid_query:
+                profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
+
+            if profile:
+                rawData = JsonEncoded.deserialize(profile.data, True)
+                error_code = update_data(rawData, new_profile)
+                if error_code:
+                    return error_code
+            
+                profile.data = JsonEncoded.serialize(rawData)
+                session.commit()
+                
+            return None
