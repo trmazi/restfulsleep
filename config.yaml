@@ -8,4 +8,10 @@ pfsense:
     client-id: 61646d696e
     client-key: 35f847a06788f8f3389fd42909de9910
 
+email:
+    server: in-v3.mailjet.com
+    address: iforgor@phaseii.network
+    username: 
+    password: 
+
 record_cache_dir: '/tmp'
