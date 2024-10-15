@@ -56,7 +56,7 @@ class deleteUserSession(Resource):
         
         session_id = data.get('sessionId', None)
         if session_id == None:
-            return APIConstants.bad_end('No sessionId was sent!')
+            return APIConstants.soft_end('No sessionId was sent!')
         
         decryptedSession = SessionData.AES.decrypt(session_id)
         if not decryptedSession:
