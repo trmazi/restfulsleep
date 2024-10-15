@@ -16,7 +16,7 @@ from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import OnboardArcade
 from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
-from api.services.auth import createUserSession, checkUserSession, deleteUserSession
+from api.services.auth import createUserSession, checkUserSession, deleteUserSession, emailAuth, check2FAKey, changePassword
 from api.services.user import getUserAccount, userCards
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
@@ -58,6 +58,11 @@ api.add_resource(createUserSession, '/v1/auth/createSession')
 api.add_resource(checkUserSession, '/v1/auth/checkSession')
 api.add_resource(deleteUserSession, '/v1/auth/deleteSession')
 
+# Email Auth
+api.add_resource(emailAuth, '/v1/auth/emailAuth')
+api.add_resource(check2FAKey, '/v1/auth/check2FAKey')
+api.add_resource(changePassword, '/v1/auth/changePassword')
+
 # User Data
 api.add_resource(getUserAccount, '/v1/user/<userId>')
 api.add_resource(userCards, '/v1/user/cards')
@@ -94,6 +99,10 @@ def load_config(filename: str) -> None:
     pf_config = config.get('pfsense', {})
     if pf_config:
         PFSenseData.update_config(pf_config)
+
+    mail_config = config.get('email', {})
+    if mail_config:
+        emailAuth.update_config(mail_config)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")

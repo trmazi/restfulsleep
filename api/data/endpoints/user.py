@@ -29,6 +29,17 @@ class UserData:
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
                 }
+            
+    def resetPassword(userId: int, newPassword: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            user = session.query(User).filter(User.id == userId).first()
+            if user is None:
+                return False
+            else:
+                hashed = pbkdf2_sha512.hash(newPassword)
+                user.password = hashed
+                session.commit()
+                return True
 
     def getUserByName(username: str) -> dict:
         with MySQLBase.SessionLocal() as session:
@@ -42,6 +53,19 @@ class UserData:
                     'admin': bool(user.admin),
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
+                }
+            
+    def getUserByEmail(email: str) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            user = session.query(User).filter(User.email == email).first()
+            if user is None:
+                return None
+            else:
+                return {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'banned': bool(user.banned),
                 }
             
     def getCards(userId: int) -> dict:
