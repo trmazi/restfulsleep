@@ -43,12 +43,12 @@ class SessionData:
 
 class KeyData:
     def createKey(opId: int, opType: str, expiration: int=(900000)) -> str:
-        key_token = ''.join(random.choice('0123456789') for _ in range(6))
+        key_token = ''.join(random.choice('123456789') for _ in range(6))
         expiration_time = int(time.time() + expiration)
 
         with MySQLBase.SessionLocal() as session:
             while session.query(Session).filter(Session.session == key_token).first():
-                key_token = ''.join(random.choice('0123456789') for _ in range(6))
+                key_token = ''.join(random.choice('123456789') for _ in range(6))
             
             new_session = Session(id=opId, session=key_token, type=opType, expiration=expiration_time)
             session.add(new_session)
