@@ -13,7 +13,7 @@ from api.data.endpoints.pfsense import PFSenseData
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.admin import OnboardArcade
+from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import createUserSession, checkUserSession, deleteUserSession, emailAuth, check2FAKey, changePassword
@@ -36,6 +36,7 @@ class restfulTop(Resource):
 api.add_resource(restfulTop, '/')
 
 # Admin
+api.add_resource(AdminDashboard, '/v1/admin')
 api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
 
 # Arcades

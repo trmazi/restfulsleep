@@ -4,8 +4,22 @@ from flask import request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
+from api.data.endpoints.admin import AdminData
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
+
+class AdminDashboard(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        statistics = AdminData.getStats()
+        return {'status': 'success', 'data': {'statistics': statistics}}
 
 class OnboardArcade(Resource):
     '''
