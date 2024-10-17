@@ -19,7 +19,8 @@ class AdminDashboard(Resource):
             return errorCode
         
         statistics = AdminData.getStats()
-        return {'status': 'success', 'data': {'statistics': statistics}}
+        audit = AdminData.getRecentAuditEvents(40)
+        return {'status': 'success', 'data': {'statistics': statistics, 'audit': audit}}
 
 class OnboardArcade(Resource):
     '''
