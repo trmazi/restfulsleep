@@ -168,6 +168,9 @@ class changePassword(Resource):
         if confirmPassword == None:
             return APIConstants.bad_end('No password confirmation provided.')
         
+        if len(str(newPassword)) < 8:
+            return APIConstants.soft_end('Password must be at least 8 characters!')
+        
         if newPassword != confirmPassword:
             return APIConstants.soft_end('The passwords don\'t match!')
 
