@@ -118,8 +118,9 @@ class ProfileData:
         if not profile:
             return 'No profile found!'
         
-        new_profile['name'] = new_profile.get('name', new_profile.get('username'))
-        
+        if new_profile.get('username') != None:
+            new_profile['name'] = new_profile.get('name', new_profile.get('username'))
+            
         def update_data(existing_profile, new_data):
             for key, value in new_data.items():
                 if isinstance(value, dict):
