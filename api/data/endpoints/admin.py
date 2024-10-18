@@ -20,7 +20,7 @@ class AdminData:
         with MySQLBase.SessionLocal() as session:
             recent_events = (
                 session.query(Audit)
-                .order_by(Audit.timestamp.desc())
+                .order_by(Audit.id.desc())
                 .limit(limit)
                 .all()
             )
