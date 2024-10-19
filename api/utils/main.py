@@ -16,8 +16,8 @@ from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
-from api.services.auth import createUserSession, checkUserSession, deleteUserSession, emailAuth, check2FAKey, changePassword
-from api.services.user import getUserAccount, userCards
+from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
+from api.services.user import UserAccount, UserCards
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
 from api.services.score import Attempts, Records
@@ -51,22 +51,18 @@ api.add_resource(OnboardingVPN, '/v1/discord/exportVPN/<arcadeId>')
 api.add_resource(OnboardingArcade, '/v1/discord/onboardArcade/<arcadeId>')
 
 # News
-api.add_resource(getAllNews, '/v1/news/getAllNews')
-api.add_resource(getNews, '/v1/news/getNews/<newsId>')
+api.add_resource(getAllNews, '/v1/news')
+api.add_resource(getNews, '/v1/news/<newsId>')
 
-# Sessions
-api.add_resource(createUserSession, '/v1/auth/createSession')
-api.add_resource(checkUserSession, '/v1/auth/checkSession')
-api.add_resource(deleteUserSession, '/v1/auth/deleteSession')
-
-# Email Auth
+# Authentication
+api.add_resource(UserSession, '/v1/auth/session')
 api.add_resource(emailAuth, '/v1/auth/emailAuth')
 api.add_resource(check2FAKey, '/v1/auth/check2FAKey')
-api.add_resource(changePassword, '/v1/auth/changePassword')
+api.add_resource(resetPassword, '/v1/auth/changePassword')
 
 # User Data
-api.add_resource(getUserAccount, '/v1/user/<userId>')
-api.add_resource(userCards, '/v1/user/cards')
+api.add_resource(UserAccount, '/v1/user')
+api.add_resource(UserCards, '/v1/user/cards')
 
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')

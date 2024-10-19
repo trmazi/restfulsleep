@@ -2,21 +2,27 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from flask_restful import Resource
-from flask import request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.endpoints.session import SessionData, KeyData
 from api.data.endpoints.user import UserData
 
-class createUserSession(Resource):
+class UserSession(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        return {'status': 'success', 'activeSession': session.get('active', False), 'userId': session.get('id', 0)}
+    
     def post(self):
         '''
         Given a user's username and password, validates them, makes a session.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         username = data.get('username', None)
         password = data.get('password', None)
@@ -33,26 +39,14 @@ class createUserSession(Resource):
             return {'status': 'success', 'sessionId': SessionData.AES.encrypt(sessionID), 'userId': user.get('id', 0)}
         else:
             return APIConstants.bad_end('Password incorrect or no user found.')
-
-class checkUserSession(Resource):
-    def post(self):
-        '''
-        Given a user's session id, check if it's in the db.
-        '''
-        sessionState, session = RequestPreCheck.getSession()
-        if not sessionState:
-            return session
-        
-        return {'status': 'success', 'activeSession': session.get('active', False), 'userId': session.get('id', 0)}
-
-class deleteUserSession(Resource):
-    def post(self):
+    
+    def delete(self):
         '''
         Given a user's session id, delete it from the db.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         session_id = data.get('sessionId', None)
         if session_id == None:
@@ -82,9 +76,9 @@ class emailAuth(Resource):
         '''
         Given a user's email, validates it, makes a key.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         email = data.get('email', None)
         if email == None:
@@ -119,9 +113,9 @@ class check2FAKey(Resource):
         '''
         Given a user's key, validates it, lets user reset password.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         key = data.get('key', None)
         if key == None:
@@ -147,14 +141,14 @@ class check2FAKey(Resource):
     
         return {'status': 'success', 'username': user.get('username')}
     
-class changePassword(Resource):
+class resetPassword(Resource):
     def post(self):
         '''
         Given a user's key, validates it, changes password.
         '''
-        data = request.get_json(silent=True)
-        if data == None:
-            return APIConstants.bad_end('No json data was sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         key = data.get('key', None)
         if key == None:
@@ -193,7 +187,7 @@ class changePassword(Resource):
             return APIConstants.bad_end('You\'re still banned.')
         
         KeyData.deleteKey(key, 'auth_key')
-        if UserData.resetPassword(user.get('id', 0), newPassword) == True:
+        if UserData.updatePassword(user.get('id', 0), newPassword) == True:
             return {'status': 'success'}
         else:
             return APIConstants.bad_end('Failed to reset!')

@@ -176,6 +176,7 @@ class User(Base):
     username = Column(String(255), unique=True)
     email = Column(String(255))
     password = Column(String(255))
+    pin = Column(String(4), primary_key=False)
     admin = Column(Boolean)
     banned = Column(Boolean)
     data = Column(LargeBinary)

@@ -40,3 +40,13 @@ class RequestPreCheck():
             return (False, APIConstants.bad_end('You must have administrative rights.'))
         
         return (True, None)
+    
+    def checkData() -> Tuple[bool, Dict]:
+        '''
+        Check if JSON data was sent. If data is found, return it.
+        '''
+        data = request.get_json(silent=True)
+        if data == None:
+            return (False, APIConstants.bad_end('No json data was sent!'))
+
+        return (True, data)

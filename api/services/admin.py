@@ -35,9 +35,9 @@ class OnboardArcade(Resource):
         if not adminState:
             return errorCode
         
-        data = request.json
-        if not data:
-            return APIConstants.bad_end('No JSON data sent!')
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
         
         formattedArcade = {
             'name': str(data['name']),

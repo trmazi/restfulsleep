@@ -30,7 +30,32 @@ class UserData:
                     'data': JsonEncoded.deserialize(user.data)
                 }
             
-    def resetPassword(userId: int, newPassword: str) -> bool:
+    def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            user = session.query(User).filter(User.id == userId).first()
+            if user is None:
+                return False
+            else:
+                didAnything = False
+                if newUsername:
+                    user.username = newUsername
+                    didAnything = True
+
+                if newEmail:
+                    user.email = newEmail
+                    didAnything = True
+
+                if newPin:
+                    user.pin = newPin
+                    didAnything = True
+
+                if didAnything:
+                    session.commit()
+                    return True
+
+                return False
+       
+    def updatePassword(userId: int, newPassword: str) -> bool:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
             if user is None:
@@ -54,7 +79,7 @@ class UserData:
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
                 }
-            
+    
     def getUserByEmail(email: str) -> dict:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.email == email).first()
@@ -67,7 +92,7 @@ class UserData:
                     'email': user.email,
                     'banned': bool(user.banned),
                 }
-            
+
     def getCards(userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:
             cards = session.query(Card).filter(Card.userid == userId).all()

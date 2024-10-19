@@ -1,3 +1,4 @@
+from flask import request
 from flask_restful import Resource
 
 from api.constants import APIConstants
@@ -7,11 +8,16 @@ from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.game import GameData
 
-class getUserAccount(Resource):
-    '''
-    Given a user ID, return a user's public info.
-    '''
-    def get(self, userId):
+class UserAccount(Resource):
+    def get(self):
+        '''
+        Loads a user's account based on ID or a User Auth Key.
+        If given a user ID, only return a user's public info. Otherwise, return everything.
+        '''
+        userId = request.args.get('userId')
+        if not userId:
+            return APIConstants.bad_end('No userId provided')
+
         user = UserData.getUser(int(userId))
         if not user:
             return APIConstants.bad_end('No user found.')
@@ -53,7 +59,64 @@ class getUserAccount(Resource):
             }
         }
     
-class userCards(Resource):
+    def post(self):
+        '''
+        Given new user params, save them.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        userId = session.get('id', 0)
+        username = None
+        email = None
+        pin = None
+
+        if data.get('username', None):
+            try:
+                username = str(data.get('username', None))
+            except:
+                return APIConstants.bad_end('Invalid username!')
+            
+            existingUser = UserData.getUserByName(username)
+            if existingUser and existingUser.get('id') != userId:
+                return APIConstants.bad_end('Username already taken.')
+
+        if data.get('email', None):
+            try:
+                email = str(data.get('email', None))
+            except:
+                return APIConstants.bad_end('Invalid email!')
+
+            splitEmail = email.split('@')
+            if len(splitEmail) != 2:
+                return APIConstants.bad_end('Invalid email!')
+            
+            if len(splitEmail[1].split('.')) != 2:
+                return APIConstants.bad_end('Invalid email!')
+
+        if data.get('pin', None):
+            try:
+                pin = str(data.get('pin', None))
+            except:
+                return APIConstants.bad_end('Invalid pin!')
+            
+            if len(pin) != 4 and len(pin) != 0:
+                return APIConstants.bad_end('PIN must be 4 characters!')
+            
+            if len(pin) == 0:
+                pin = None # If it's an empty string, we'll just forget it.
+            
+        if UserData.updateUser(userId, username, email, pin):
+            return {'status': 'success'}
+
+        return APIConstants.bad_end('Failed to save!')
+    
+class UserCards(Resource):
     '''
     Handle loading, creation, and deletion of a user's cards. Requires the auth header for a user.
     '''
