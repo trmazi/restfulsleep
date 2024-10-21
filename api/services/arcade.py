@@ -21,35 +21,37 @@ class Arcades(Resource):
         
         userId = session.get('id', 0)
         user = UserData.getUser(userId)
+        authUser = True
 
         if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
-            return APIConstants.bad_end('You don\'t own this arcade or it doesn\'t exist!')
+            authUser = False
         
         arcade = ArcadeData.getArcade(arcadeId)
         if not arcade:
             return APIConstants.bad_end('Unable to load the arcade!')
         
-        filteredOwners = []
-        owners = ArcadeData.getArcadeOwners(arcadeId)
-        for owner in owners:
-            ownerData = UserData.getUser(owner)
-            if ownerData is not None:
-                data = ownerData.get('data', {})
-                discordLink = data.get('discord', {})
-                avatar = None
-                if discordLink.get('linked', False):
-                    avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
+        if authUser:
+            filteredOwners = []
+            owners = ArcadeData.getArcadeOwners(arcadeId)
+            for owner in owners:
+                ownerData = UserData.getUser(owner)
+                if ownerData is not None:
+                    data = ownerData.get('data', {})
+                    discordLink = data.get('discord', {})
+                    avatar = None
+                    if discordLink.get('linked', False):
+                        avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
 
 
-                ownerData['email'] = None
-                ownerData['data'] = None
-                ownerData['avatar'] = avatar
-                filteredOwners.append(ownerData)
+                    ownerData['email'] = None
+                    ownerData['data'] = None
+                    ownerData['avatar'] = avatar
+                    filteredOwners.append(ownerData)
 
-        arcade['owners'] = filteredOwners
-        arcade['machines'] = MachineData.getArcadeMachines(arcadeId)
+            arcade['owners'] = filteredOwners
+            arcade['machines'] = MachineData.getArcadeMachines(arcadeId)
         
-        return {'status': 'success', 'arcade': arcade}
+        return {'status': 'success', 'arcade': arcade if authUser else {'name': arcade.get('name'), 'description': arcade.get('description')}}
     
 class VPN(Resource):
     '''
