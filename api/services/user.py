@@ -26,7 +26,12 @@ class UserAccount(Resource):
         sessionState, session = RequestPreCheck.getSession()
         if sessionState:
             if user.get('id', 0) == session.get('id', -1):
+                if user.get('banned', False):
+                    return APIConstants.bad_end('You have been banned.')
                 authUser = True
+
+        if user.get('banned', False):
+            return APIConstants.bad_end('This user is banned.')
 
         userData = user.get('data', {})
         discordLink = userData.get('discord', {})
@@ -115,6 +120,54 @@ class UserAccount(Resource):
             return {'status': 'success'}
 
         return APIConstants.bad_end('Failed to save!')
+
+class UserUpdatePassword(Resource):
+    def post(self):
+        '''
+        Validate user, changes password.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        userId = session.get('id', 0)
+
+        currentPassword = data.get('currentPassword', None)
+        if currentPassword == None:
+            return APIConstants.bad_end('No currentPassword provided.')
+        
+        if not UserData.validatePassword(currentPassword, userId):
+            return APIConstants.soft_end('Password incorrect.')
+        
+        newPassword = data.get('newPassword', None)
+        if newPassword == None:
+            return APIConstants.bad_end('No newPassword provided.')
+        
+        confirmPassword = data.get('confirmPassword', None)
+        if confirmPassword == None:
+            return APIConstants.bad_end('No confirmPassword confirmation provided.')
+        
+        if len(str(newPassword)) < 8:
+            return APIConstants.soft_end('Password must be at least 8 characters!')
+        
+        if newPassword != confirmPassword:
+            return APIConstants.soft_end('The passwords don\'t match!')
+        
+        user = UserData.getUser(userId)
+        if not user:
+            return APIConstants.bad_end('No user found.')
+        
+        if user.get('banned', False):
+            return APIConstants.bad_end('You\'re banned.')
+
+        if UserData.updatePassword(user.get('id', 0), newPassword) == True:
+            return {'status': 'success'}
+        else:
+            return APIConstants.bad_end('Failed to update password!')
     
 class UserCards(Resource):
     '''
