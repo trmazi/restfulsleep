@@ -100,3 +100,31 @@ class UserData:
                 return None
             else:
                 return [card.id for card in cards]
+            
+    def cardExist(cardId: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            card = session.query(Card).filter(Card.id == cardId).first()
+            if card is None:
+                return False
+            else:
+                return True
+
+    def putCard(userId: int, cardId: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            if session.query(Card).filter(Card.id == cardId).first() is not None:
+                return False
+
+            new_card = Card(id=cardId, userid=userId)
+            session.add(new_card)
+            session.commit()
+            return True
+
+    def deleteCard(userId: str, cardId: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            card = session.query(Card).filter(Card.id == cardId, Card.userid == userId).first()
+            if card is None:
+                return True
+
+            session.delete(card)
+            session.commit()
+            return True

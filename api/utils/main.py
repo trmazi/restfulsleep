@@ -17,7 +17,7 @@ from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
-from api.services.user import UserAccount, UserUpdatePassword, UserCards
+from api.services.user import UserAccount, UserUpdatePassword, UserCard
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
 from api.services.score import Attempts, Records
@@ -63,7 +63,7 @@ api.add_resource(resetPassword, '/v1/auth/changePassword')
 # User Data
 api.add_resource(UserAccount, '/v1/user')
 api.add_resource(UserUpdatePassword, '/v1/user/updatePassword')
-api.add_resource(UserCards, '/v1/user/cards')
+api.add_resource(UserCard, '/v1/user/card')
 
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')

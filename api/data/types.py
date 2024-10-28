@@ -40,7 +40,7 @@ class Balance(Base):
 
 class Card(Base):
     __tablename__ = 'card'
-    id = Column(Integer, primary_key=True)
+    id = Column(String(16), primary_key=True)
     userid = Column(Integer)
 
 class Catalog(Base):

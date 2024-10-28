@@ -49,12 +49,10 @@ class UserSession(Resource):
             return data
         
         session_id = data.get('sessionId', None)
-        if session_id == None:
-            return APIConstants.soft_end('No sessionId was sent!')
-        
-        decryptedSession = SessionData.AES.decrypt(session_id)
-        if not decryptedSession:
-            return APIConstants.bad_end('Unable to decrypt SessionId!')
+        if session_id != None:
+            decryptedSession = SessionData.AES.decrypt(session_id)
+            if not decryptedSession:
+                return APIConstants.bad_end('Unable to decrypt SessionId!')
 
         SessionData.deleteSession(decryptedSession)
         return {'status': 'success'}

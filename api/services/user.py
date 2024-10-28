@@ -169,7 +169,7 @@ class UserUpdatePassword(Resource):
         else:
             return APIConstants.bad_end('Failed to update password!')
     
-class UserCards(Resource):
+class UserCard(Resource):
     '''
     Handle loading, creation, and deletion of a user's cards. Requires the auth header for a user.
     '''
@@ -195,3 +195,54 @@ class UserCards(Resource):
             'status': 'success',
             'cards': returnCards
         }
+    
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        cardId = data.get('cardId', None)
+        if cardId == None:
+            return APIConstants.bad_end('No cardId provided.')
+        
+        try:
+            cardId = CardCipher.decode(cardId)
+        except:
+            return APIConstants.soft_end('Bad encoding!')
+        
+        if UserData.cardExist(cardId):
+            return APIConstants.soft_end('Card in use!')
+        
+        userId = session.get('id', 0)
+        if not UserData.putCard(userId, cardId):
+            return APIConstants.bad_end('Failed to add!')
+        
+        return {'status': 'success'}
+    
+    def delete(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        cardId = data.get('cardId', None)
+        if cardId == None:
+            return APIConstants.bad_end('No cardId provided.')
+        
+        try:
+            cardId = CardCipher.decode(cardId)
+        except:
+            return APIConstants.soft_end('Bad encoding!')
+        
+        userId = session.get('id', 0)
+        if not UserData.deleteCard(userId, cardId):
+            return APIConstants.bad_end('Failed to delete!')
+        
+        return {'status': 'success'}
