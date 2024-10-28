@@ -30,6 +30,14 @@ class UserData:
                     'data': JsonEncoded.deserialize(user.data)
                 }
             
+    def getUserPin(userId: int) -> str:
+        with MySQLBase.SessionLocal() as session:
+            userPin = session.query(User.pin).filter(User.id == userId).first()
+            if userPin is None:
+                return None
+            else:
+                return userPin.pin
+            
     def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None) -> bool:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
@@ -107,7 +115,7 @@ class UserData:
             if card is None:
                 return False
             else:
-                return True
+                return card.userid
 
     def putCard(userId: int, cardId: str) -> bool:
         with MySQLBase.SessionLocal() as session:
