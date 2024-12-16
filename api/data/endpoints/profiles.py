@@ -4,6 +4,7 @@ from api.data.mysql import MySQLBase
 from api.data.types import Profile, Refid
 from api.data.json import JsonEncoded
 from typing import Dict, Any, Set, List
+from api.data.data import BaseData
 
 class ProfileData:
     @staticmethod
@@ -120,28 +121,6 @@ class ProfileData:
         
         if new_profile.get('username') != None:
             new_profile['name'] = new_profile.get('name', new_profile.get('username'))
-            
-        def update_data(existing_profile, new_data):
-            for key, value in new_data.items():
-                if isinstance(value, dict):
-                    if key == "usergamedata":
-                        continue
-
-                    if key not in existing_profile:
-                        existing_profile[key] = {}
-                    
-                    if isinstance(existing_profile[key], dict):
-                        update_data(existing_profile[key], value)
-                    else:
-                        return((None, f"Type mismatch for {key}: expected dict but got {type(value).__name__}"))
-                else:
-                    if key in existing_profile:
-                        if isinstance(existing_profile[key], type(value)):
-                            existing_profile[key] = value
-                        else:
-                            return((None, f"Type mismatch for {key}: expected {type(existing_profile[key]).__name__} but got {type(value).__name__}"))
-                    else:
-                        existing_profile[key] = value
 
         with MySQLBase.SessionLocal() as session:
             profile = None
@@ -156,7 +135,7 @@ class ProfileData:
 
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data, True)
-                error_code = update_data(rawData, new_profile)
+                error_code = BaseData.update_data(rawData, new_profile)
                 if error_code:
                     return error_code
             

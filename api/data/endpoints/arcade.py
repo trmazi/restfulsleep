@@ -1,6 +1,7 @@
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import Arcade, ArcadeOwner
+from api.data.data import BaseData
 
 class ArcadeData:   
     def getArcade(arcadeId: int):
@@ -57,6 +58,24 @@ class ArcadeData:
                 'pin': int(arcade.pin),
                 'data': JsonEncoded.deserialize(arcade.data)
             }
+        
+    def updateArcadeData(arcadeId: int, new_arcade: dict) -> str | None:
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return 'No arcade found!'
+
+        with MySQLBase.SessionLocal() as session:
+            arcade = session.query(Arcade).filter(Arcade.id == arcadeId).first()
+            if arcade:
+                rawData = JsonEncoded.deserialize(arcade.data, True)
+                error_code = BaseData.update_data(rawData, new_arcade)
+                if error_code:
+                    return error_code
+            
+                arcade.data = JsonEncoded.serialize(rawData)
+                session.commit()
+                
+            return None
 
     def fromName(arcadeName: str):
         with MySQLBase.SessionLocal() as session:

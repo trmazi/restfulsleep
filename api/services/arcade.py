@@ -53,6 +53,33 @@ class Arcades(Resource):
         
         return {'status': 'success', 'arcade': arcade if authUser else {'name': arcade.get('name'), 'description': arcade.get('description')}}
     
+    def post(self, arcadeId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get('id', 0)
+        user = UserData.getUser(userId)
+
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
+            return APIConstants.bad_end('You don\'t have access to this arcade!')
+        
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+
+        error_code = ArcadeData.updateArcadeData(arcadeId, data)
+        if error_code:
+            return APIConstants.bad_end(error_code)
+        
+        return {
+            'status': 'success'
+        }, 200
+    
 class VPN(Resource):
     '''
     Handle exporting of an arcade's VPN profile.
