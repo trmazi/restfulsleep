@@ -95,20 +95,25 @@ class ScoreData:
                     query = query.filter(Attempt.lid == machineId)
 
                 results = query.limit(100).all()
-                return [
-                    {
+                attempts = []
+                for attempt in results:
+                    attemptUser = ProfileData.getProfile(game, version, attempt.userid, True)
+                    if attemptUser == None:
+                        continue
+
+                    attempts.append({
                         'song': music_dict.get(attempt.musicid, {}),
                         'timestamp': attempt.timestamp,
                         'userId': attempt.userid,
-                        'username': ProfileData.getProfile(game, version, attempt.userid, True).get('username', ''),
+                        'username': attemptUser.get('username', ''),
                         'musicId': attempt.musicid,
                         'machineId': attempt.lid,
                         'points': attempt.points,
                         'newRecord': bool(attempt.new_record),
                         'data': JsonEncoded.deserialize(attempt.data),
-                    }
-                    for attempt in results
-                ]
+                    })
+
+                return attempts
 
         # Split db_ids into chunks
         batch_size = len(db_ids) // 8 + 1
