@@ -80,6 +80,45 @@ class Arcades(Resource):
             'status': 'success'
         }, 200
     
+class ArcadeSettings(Resource):
+    '''
+    Handle loading, creation, and updating of game event settings for an arcade.
+    Requires a valid user session and that a user owns an arcade (or if user is admin) for updating.
+    '''
+    def get(self, arcadeId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get('id', 0)
+        user = UserData.getUser(userId)
+        authUser = True
+
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
+            authUser = False
+        
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+        
+        game = request.args.get('game')
+        try:
+            game = str(game)
+        except:
+            return APIConstants.bad_end('Game is malformed!')
+        
+        version = request.args.get('version')
+        try:
+            version = int(version)
+        except:
+            return APIConstants.bad_end('Version is malformed!')
+        
+        if authUser:
+            arcade_settings = ArcadeData.getArcadeSettings(arcadeId, game, version, 'game_config')
+            return {'status': 'success', 'data': arcade_settings}
+        
+        return APIConstants.bad_end('Unauthorized.')
+    
 class VPN(Resource):
     '''
     Handle exporting of an arcade's VPN profile.

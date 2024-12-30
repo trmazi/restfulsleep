@@ -1,6 +1,6 @@
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
-from api.data.types import Arcade, ArcadeOwner
+from api.data.types import Arcade, ArcadeOwner, ArcadeSettings
 from api.data.data import BaseData
 
 class ArcadeData:   
@@ -76,6 +76,14 @@ class ArcadeData:
                 session.commit()
                 
             return None
+        
+    def getArcadeSettings(arcadeId: int, game: str, version: int, type: str):
+        with MySQLBase.SessionLocal() as session:
+            arcadeSettings = session.query(ArcadeSettings).filter(ArcadeSettings.arcadeid == arcadeId, ArcadeSettings.game == game, ArcadeSettings.version == version, ArcadeSettings.type == type).first()
+            if arcadeSettings is None:
+                return None
+            else:
+                return JsonEncoded.deserialize(arcadeSettings.data)
 
     def fromName(arcadeName: str):
         with MySQLBase.SessionLocal() as session:

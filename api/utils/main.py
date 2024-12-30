@@ -14,7 +14,7 @@ from api.data.endpoints.pfsense import PFSenseData
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import AdminDashboard, OnboardArcade
-from api.services.arcade import Arcades, Paseli, VPN, CheckArcadeName, CheckPCBID
+from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard
@@ -41,6 +41,7 @@ api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
 
 # Arcades
 api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
+api.add_resource(ArcadeSettings, '/v1/arcade/<arcadeId>/settings')
 api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
 api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')
 api.add_resource(CheckArcadeName, '/v1/arcade/checkName')
