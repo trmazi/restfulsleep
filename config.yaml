@@ -1,17 +1,21 @@
 database:
-  db: bemanidev
-  user: bemani
-  pass: bemani
+  db: 
+  user: 
+  pass: 
 
 pfsense:
-    server: https://10.5.7.1/api/v1
-    client-id: 61646d696e
-    client-key: 35f847a06788f8f3389fd42909de9910
+    server: 
+    client-id: 
+    client-key: 
 
 email:
-    server: in-v3.mailjet.com
-    address: iforgor@phaseii.network
+    server: 
+    address: 
     username: 
     password: 
+
+backblaze:
+    key-id: 
+    auth-key: 
 
 record_cache_dir: '/tmp'
