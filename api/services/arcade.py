@@ -115,9 +115,46 @@ class ArcadeSettings(Resource):
         
         if authUser:
             arcade_settings = ArcadeData.getArcadeSettings(arcadeId, game, version, 'game_config')
-            return {'status': 'success', 'data': arcade_settings}
+            return {'status': 'success', 'data': arcade_settings if arcade_settings else {}}
         
         return APIConstants.bad_end('Unauthorized.')
+    
+    def post(self, arcadeId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get('id', 0)
+        user = UserData.getUser(userId)
+
+        if not ArcadeData.checkOwnership(userId, arcadeId) and not user.get("admin", False):
+            return APIConstants.bad_end('Unauthorized.')
+        
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+        
+        game = request.args.get('game')
+        try:
+            game = str(game)
+        except:
+            return APIConstants.bad_end('Game is malformed!')
+        
+        version = request.args.get('version')
+        try:
+            version = int(version)
+        except:
+            return APIConstants.bad_end('Version is malformed!')
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+
+        update_state = ArcadeData.updateArcadeSettings(arcadeId, game, version, 'game_config', data)
+        if update_state:
+            return APIConstants.bad_end(update_state)
+
+        return {'status': 'success'}
     
 class VPN(Resource):
     '''

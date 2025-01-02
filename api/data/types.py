@@ -26,9 +26,9 @@ class ArcadeOwner(Base):
 class ArcadeSettings(Base):
     __tablename__ = 'arcade_settings'
     arcadeid = Column(Integer, nullable=False, primary_key=True)
-    game = Column(String(32), nullable=False)
-    version = Column(Integer, nullable=False)
-    type = Column(String(64), nullable=False)
+    game = Column(String(32), nullable=False, primary_key=True)
+    version = Column(Integer, nullable=False, primary_key=True)
+    type = Column(String(64), nullable=False, primary_key=True)
     data = Column(LargeBinary, nullable=False)
 
 class Audit(Base):

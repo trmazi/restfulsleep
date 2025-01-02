@@ -84,6 +84,35 @@ class ArcadeData:
                 return None
             else:
                 return JsonEncoded.deserialize(arcadeSettings.data)
+            
+    def updateArcadeSettings(arcadeId: int, game: str, version: int, type_s: str, new_settings: dict) -> str | None:       
+        with MySQLBase.SessionLocal() as session:
+            arcadeSettings = session.query(ArcadeSettings).filter(ArcadeSettings.arcadeid == arcadeId, ArcadeSettings.game == game, ArcadeSettings.version == version, ArcadeSettings.type == type_s).first()
+            if arcadeSettings:
+                rawData = JsonEncoded.deserialize(arcadeSettings.data, True)
+                error_code = BaseData.update_data(rawData, new_settings)
+                if error_code:
+                    return error_code
+
+                arcadeSettings.data = JsonEncoded.serialize(rawData)
+
+            else:
+                rawData = JsonEncoded.deserialize("{}", True)
+                error_code = BaseData.update_data(rawData, new_settings)
+                if error_code:
+                    return error_code
+                arcadeSettings = ArcadeSettings(
+                    arcadeid = arcadeId,
+                    game = game,
+                    version = version,
+                    type = type_s,
+                    data = JsonEncoded.serialize(rawData)
+                )
+                session.add(arcadeSettings)
+                session.flush()
+
+            session.commit()
+            return None
 
     def fromName(arcadeName: str):
         with MySQLBase.SessionLocal() as session:
