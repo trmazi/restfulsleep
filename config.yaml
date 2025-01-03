@@ -15,7 +15,12 @@ email:
     password: 
 
 backblaze:
+    bucket-name:
     key-id: 
     auth-key: 
+
+share:
+    upload-endpoint:
+    public-path: 
 
 record_cache_dir: '/tmp'

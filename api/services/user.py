@@ -361,3 +361,23 @@ class UserCard(Resource):
             return APIConstants.bad_end('Failed to delete!')
         
         return {'status': 'success'}
+
+class UserPlayVideos(Resource):
+    '''
+    Handle loading, and deletion of a user's play videos. Requires the auth header for a user.
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get('id', 0)
+
+        playVideos = UserData.getUserPlayVideos(int(userId))
+        if not playVideos:
+            return APIConstants.bad_end('No play videos found.')
+
+        return {
+            'status': 'success',
+            'data': playVideos
+        }

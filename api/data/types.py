@@ -86,6 +86,15 @@ class GameSettings(Base):
     userid = Column(Integer, primary_key=True)
     data = Column(LargeBinary)
 
+class GameUpdates(Base):
+    __tablename__ = 'game_updates'
+    id = Column(Integer, primary_key=True)
+    game = Column(String(255))
+    mcode = Column(String(255))
+    from_datecode = Column(Integer)
+    to_datecode = Column(Integer)
+    data = Column(LargeBinary)
+
 class Link(Base):
     __tablename__ = 'link'
     game = Column(String(255), primary_key=True)
@@ -188,3 +197,15 @@ class User(Base):
     admin = Column(Boolean)
     banned = Column(Boolean)
     data = Column(LargeBinary)
+
+class UserContent(Base):
+    __tablename__ = 'user_content'
+    id = Column(Integer, primary_key=True)
+    game = Column(String(255))
+    version = Column(Integer)
+    userid = Column(Integer)
+    type = Column(String(255))
+    data = Column(LargeBinary)
+    sessionid = Column(String(255))
+    musicid = Column(Integer)
+    timestamp = Column(Integer)

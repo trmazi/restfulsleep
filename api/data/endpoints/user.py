@@ -2,7 +2,8 @@ from passlib.hash import pbkdf2_sha512
 
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
-from api.data.types import User, Card
+from api.data.types import User, UserContent, Card
+from api.data.data import BaseData
 
 class UserData:
     def validatePassword(plain_password: str, userID: int) -> bool:
@@ -29,6 +30,38 @@ class UserData:
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
                 }
+            
+    def getUserPlayVideos(userId: int) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            play_videos = session.query(UserContent).filter(UserContent.userid == userId, UserContent.type == "play_video").all()
+            
+            sorted_videos = []
+            for play_video in play_videos:
+                sorted_videos.append({
+                    'id': int(play_video.id),
+                    'timestamp': int(play_video.timestamp),
+                    'game': play_video.game,
+                    'version': play_video.version,
+                    'musicid': int(play_video.musicid),
+                    'sessionId': play_video.sessionid,
+                    'data': JsonEncoded.deserialize(play_video.data)
+                })
+            
+            return sorted_videos
+
+    def updateUserPlayVideoData(sessionId: str, new_data: dict) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            play_video = session.query(UserContent).filter(UserContent.type == "play_video", UserContent.sessionid == sessionId).first()
+            if play_video:
+                rawData = JsonEncoded.deserialize(play_video.data, True)
+                error_code = BaseData.update_data(rawData, new_data)
+                if error_code:
+                    return error_code
+            
+                play_video.data = JsonEncoded.serialize(rawData)
+                session.commit()
+            
+            return None
             
     def getUserPin(userId: int) -> str:
         with MySQLBase.SessionLocal() as session:

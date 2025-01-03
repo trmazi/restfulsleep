@@ -11,17 +11,22 @@ from api.data.mysql import MySQLBase
 # PFSense Stuff
 from api.data.endpoints.pfsense import PFSenseData
 
+# Backblaze
+from api.external.backblaze import BackBlazeCDN
+
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
-from api.services.user import UserAccount, UserUpdatePassword, UserCard
+from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserPlayVideos
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
 from api.services.score import Attempts, Records
-from api.services.share import shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
+
+# Share server
+from api.services.share import ShareServer, shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
 app = Flask(__name__)
 CORS(app)
@@ -65,6 +70,7 @@ api.add_resource(resetPassword, '/v1/auth/changePassword')
 api.add_resource(UserAccount, '/v1/user')
 api.add_resource(UserUpdatePassword, '/v1/user/updatePassword')
 api.add_resource(UserCard, '/v1/user/card')
+api.add_resource(UserPlayVideos, '/v1/user/playVideos')
 
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')
@@ -81,7 +87,7 @@ api.add_resource(Records, '/v1/records')
 api.add_resource(shareServerStatus, '/share/server/status')
 api.add_resource(shareNewSession, '/share/sessions/new')
 api.add_resource(shareBeginUpload, '/share/sessions/<sessionId>/videos/<videoId>/begin-upload')
-api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>')
+api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>/<videoId>')
 api.add_resource(shareEndUpload, '/share/sessions/<sessionId>/videos/<videoId>/end-upload')
 
 def load_config(filename: str) -> None:
@@ -102,6 +108,14 @@ def load_config(filename: str) -> None:
     mail_config = config.get('email', {})
     if mail_config:
         emailAuth.update_config(mail_config)
+
+    b2_config = config.get('backblaze', {})
+    if b2_config:
+        BackBlazeCDN.update_config(b2_config)
+
+    share_config = config.get('share', {})
+    if share_config:
+        ShareServer.update_config(share_config)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")

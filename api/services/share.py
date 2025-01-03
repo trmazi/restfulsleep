@@ -1,6 +1,19 @@
+from typing import Any, Dict
 from flask_restful import Resource
 from flask import request
-from api.external.discord import GoodSaniacWebhook
+
+from api.data.endpoints.share import ShareData
+from api.data.endpoints.user import UserData
+from api.external.backblaze import BackBlazeCDN
+
+class ShareServer:
+    SERVER_ENDPOINT = None
+    PUBLIC_PATH = None
+
+    @staticmethod
+    def update_config(share_config: Dict[str, Any]) -> None:
+        ShareServer.SERVER_ENDPOINT = share_config.get('upload-endpoint', '')
+        ShareServer.PUBLIC_PATH = share_config.get('public-path', '')
 
 class shareServerStatus(Resource):
     def get(self):
@@ -12,33 +25,55 @@ class shareServerStatus(Resource):
 
 class shareNewSession(Resource):
     def post(self):
+        sessionId = ShareData.getNextSession()
         responseData = {
             "status": 200,
             "message": "",
-            "session": "testSession" # Replace with generated Session ID
+            "session": sessionId
         }
         return responseData, 200
 
 class shareBeginUpload(Resource):
     def post(self, sessionId, videoId):
-        responseData = {
-            "status": 200,
-            "message": "",
-            "url": f'https://restfulsleep.phaseii.network/share/videoUpload/{sessionId}'
-        }
+        upload_endpoint = ShareServer.SERVER_ENDPOINT
+
+        if upload_endpoint:
+            responseData = {
+                "status": 200,
+                "message": "",
+                "url": f'{upload_endpoint}/share/videoUpload/{sessionId}/{videoId}'
+            }
+        else: 
+            responseData = {
+                "status": 500,
+                "message": "Share server not ready!",
+                "url": ""
+            }
+
         return responseData, 200
     
 class shareVideoUpload(Resource):
-    def put(self, sessionId):
+    def put(self, sessionId, videoId):
         if request.data:
-            GoodSaniacWebhook().sendVideoMessage(request.data)
+            uploadState = BackBlazeCDN().uploadUserVideo(request.data, sessionId, videoId)
+            if uploadState:
+                return 200
 
-        return 200
+        return 500
 
 class shareEndUpload(Resource):
     def post(self, sessionId, videoId):
-        responseData = {
-            "status": 200,
-            "message": ""
-        }
+        public_path = ShareServer.PUBLIC_PATH
+        update_status = UserData.updateUserPlayVideoData(sessionId, {"status": "uploaded", "url": f"{public_path}/{sessionId}.mp4"})
+
+        if not update_status:
+            responseData = {
+                "status": 200,
+                "message": ""
+            }
+        else:
+            responseData = {
+                "status": 500,
+                "message": ""
+            }
         return responseData, 200

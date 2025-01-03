@@ -9,3 +9,4 @@ requests
 passlib
 pycryptodome
 discord-webhook
+b2sdk
