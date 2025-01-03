@@ -374,8 +374,6 @@ class UserPlayVideos(Resource):
         userId = session.get('id', 0)
 
         playVideos = UserData.getUserPlayVideos(int(userId))
-        if not playVideos:
-            return APIConstants.bad_end('No play videos found.')
 
         return {
             'status': 'success',
