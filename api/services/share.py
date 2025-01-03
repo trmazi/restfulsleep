@@ -82,7 +82,7 @@ class shareEndUpload(Resource):
             try:
                 requests.post(api_endpoint, json=request_data)
             except:
-                return None, 500
+                print("BM error!")
 
         if not update_status:
             responseData = {
