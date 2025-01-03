@@ -48,6 +48,24 @@ class UserData:
                 })
             
             return sorted_videos
+        
+    def getUserPlayVideo(sessionId: str) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            play_video = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == "play_video").all()
+            
+            if play_video:
+                return {
+                    'id': int(play_video.id),
+                    'userid': int(play_video.userid),
+                    'timestamp': int(play_video.timestamp),
+                    'game': play_video.game,
+                    'version': play_video.version,
+                    'musicid': int(play_video.musicid),
+                    'sessionId': play_video.sessionid,
+                    'data': JsonEncoded.deserialize(play_video.data)
+                }
+            
+            return None
 
     def updateUserPlayVideoData(sessionId: str, new_data: dict) -> dict:
         with MySQLBase.SessionLocal() as session:

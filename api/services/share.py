@@ -1,3 +1,4 @@
+import requests
 from typing import Any, Dict
 from flask_restful import Resource
 from flask import request
@@ -65,6 +66,23 @@ class shareEndUpload(Resource):
     def post(self, sessionId, videoId):
         public_path = ShareServer.PUBLIC_PATH
         update_status = UserData.updateUserPlayVideoData(sessionId, {"status": "uploaded", "url": f"{public_path}/{sessionId}.mp4"})
+
+        video = UserData.getUserPlayVideo(sessionId)
+        user = UserData.getUser(video.userid)
+
+        userDiscord = user.get('data', {}).get('discord', {})
+        if userDiscord.get('linked', False):
+            request_data = {
+                "discordId": userDiscord.get('id', None),
+                "video": {
+                    "url": f"{public_path}/{sessionId}.mp4",
+                }
+            }
+            api_endpoint = f"http://10.5.7.20:8017/uploadComplete"
+            try:
+                requests.post(api_endpoint, json=request_data)
+            except:
+                return None, 500
 
         if not update_status:
             responseData = {
