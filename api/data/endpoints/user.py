@@ -51,7 +51,7 @@ class UserData:
         
     def getUserPlayVideo(sessionId: str) -> dict:
         with MySQLBase.SessionLocal() as session:
-            play_video = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == "play_video").all()
+            play_video = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == "play_video").first()
             
             if play_video:
                 return {
