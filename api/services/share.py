@@ -68,7 +68,7 @@ class shareEndUpload(Resource):
         update_status = UserData.updateUserPlayVideoData(sessionId, {"status": "uploaded", "url": f"{public_path}/{sessionId}.mp4"})
 
         video = UserData.getUserPlayVideo(sessionId)
-        user = UserData.getUser(video.userid)
+        user = UserData.getUser(video.get('userid', 0))
 
         userDiscord = user.get('data', {}).get('discord', {})
         if userDiscord.get('linked', False):
