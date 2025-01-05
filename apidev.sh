@@ -1,2 +1,2 @@
 source /var/restfulenv/bin/activate
-./startapi --config ~/development.config.yaml 
+./startapi --config ./development.config.yaml 

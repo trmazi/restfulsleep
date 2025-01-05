@@ -113,6 +113,27 @@ class UserData:
                     return True
 
                 return False
+            
+    def updateUserData(userId: int, new_data: dict) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            user = session.query(User).filter(User.id == userId).first()
+            if user is None:
+                return False
+            else:
+                didAnything = False
+                if new_data:
+                    rawData = JsonEncoded.deserialize(user.data, True)
+                    error_code = BaseData.update_data(rawData, new_data)
+                    if error_code:
+                        return error_code
+                    user.data = JsonEncoded.serialize(rawData)
+                    didAnything = True
+
+                if didAnything:
+                    session.commit()
+                    return True
+
+                return False
        
     def updatePassword(userId: int, newPassword: str) -> bool:
         with MySQLBase.SessionLocal() as session:

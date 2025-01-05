@@ -23,4 +23,18 @@ share:
     upload-endpoint:
     public-path: 
 
+discord:
+    token-url: 
+    client-id: 
+    client-secret: 
+    callback-url: 
+    data-url: 
+    
+tachi:
+    token-url: 
+    user-url: 
+    client-id: 
+    client-secret: 
+    callback-url: 
+
 record_cache_dir: '/tmp'

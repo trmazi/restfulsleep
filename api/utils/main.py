@@ -28,6 +28,9 @@ from api.services.score import Attempts, Records
 # Share server
 from api.services.share import ShareServer, shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
 
+# Integrations
+from api.services.integrate import Integrations, IntegrateDiscord, IntegrateTachi
+
 app = Flask(__name__)
 CORS(app)
 api = Api(app)
@@ -71,6 +74,10 @@ api.add_resource(UserAccount, '/v1/user')
 api.add_resource(UserUpdatePassword, '/v1/user/updatePassword')
 api.add_resource(UserCard, '/v1/user/card')
 api.add_resource(UserPlayVideos, '/v1/user/playVideos')
+
+# Integration callbacks
+api.add_resource(IntegrateDiscord, '/v1/user/integrate/discord')
+api.add_resource(IntegrateTachi, '/v1/user/integrate/tachi')
 
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')
@@ -116,6 +123,11 @@ def load_config(filename: str) -> None:
     share_config = config.get('share', {})
     if share_config:
         ShareServer.update_config(share_config)
+
+    discord_config = config.get('discord', {})
+    tachi_config = config.get('tachi', {})
+    if share_config:
+        Integrations.update_config(discord_config, tachi_config)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
