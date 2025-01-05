@@ -37,4 +37,8 @@ tachi:
     client-secret: 
     callback-url: 
 
+bad-maniac:
+    endpoint: 
+    auth-key: 
+
 record_cache_dir: '/tmp'

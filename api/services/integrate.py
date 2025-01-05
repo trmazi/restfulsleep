@@ -3,6 +3,7 @@ from flask_restful import Resource
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.endpoints.user import UserData
+from api.external.badmaniac import BadManiac
 
 class Integrations:
     DISCORD_CONFIG = {}
@@ -78,6 +79,8 @@ class IntegrateDiscord(Resource):
                     }
                     update_state = UserData.updateUserData(userId, {'discord': discord_dict})
                     if update_state:
+                        BadManiac.send_link_complete(discord_dict.get('id'))
+
                         return 200
                     else:
                         return APIConstants.bad_end('Failed to save discord!')

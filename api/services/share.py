@@ -6,6 +6,7 @@ from flask import request
 from api.data.endpoints.share import ShareData
 from api.data.endpoints.user import UserData
 from api.external.backblaze import BackBlazeCDN
+from api.external.badmaniac import BadManiac
 
 class ShareServer:
     SERVER_ENDPOINT = None
@@ -18,80 +19,70 @@ class ShareServer:
 
 class shareServerStatus(Resource):
     def get(self):
-        responseData = {
+        response_data = {
             "status": 200,
             "message": ""
         }
-        return responseData, 200
+        return response_data, 200
 
 class shareNewSession(Resource):
     def post(self):
-        sessionId = ShareData.getNextSession()
-        responseData = {
+        session_id = ShareData.getNextSession()
+        response_data = {
             "status": 200,
             "message": "",
-            "session": sessionId
+            "session": session_id
         }
-        return responseData, 200
+        return response_data, 200
 
 class shareBeginUpload(Resource):
-    def post(self, sessionId, videoId):
+    def post(self, session_id, video_id):
         upload_endpoint = ShareServer.SERVER_ENDPOINT
 
         if upload_endpoint:
-            responseData = {
+            response_data = {
                 "status": 200,
                 "message": "",
-                "url": f'{upload_endpoint}/share/videoUpload/{sessionId}/{videoId}'
+                "url": f'{upload_endpoint}/share/videoUpload/{session_id}/{video_id}'
             }
         else: 
-            responseData = {
+            response_data = {
                 "status": 500,
                 "message": "Share server not ready!",
                 "url": ""
             }
 
-        return responseData, 200
+        return response_data, 200
     
 class shareVideoUpload(Resource):
-    def put(self, sessionId, videoId):
+    def put(self, session_id, video_id):
         if request.data:
-            uploadState = BackBlazeCDN().uploadUserVideo(request.data, sessionId, videoId)
+            uploadState = BackBlazeCDN().uploadUserVideo(request.data, session_id, video_id)
             if uploadState:
                 return 200
 
         return 500
 
 class shareEndUpload(Resource):
-    def post(self, sessionId, videoId):
+    def post(self, session_id, video_id):
         public_path = ShareServer.PUBLIC_PATH
-        update_status = UserData.updateUserPlayVideoData(sessionId, {"status": "uploaded", "url": f"{public_path}/{sessionId}.mp4"})
+        update_status = UserData.updateUserPlayVideoData(session_id, {"status": "uploaded", "url": f"{public_path}/{session_id}.mp4"})
 
-        video = UserData.getUserPlayVideo(sessionId)
+        video = UserData.getUserPlayVideo(session_id)
         user = UserData.getUser(video.get('userid', 0))
 
         userDiscord = user.get('data', {}).get('discord', {})
         if userDiscord.get('linked', False):
-            request_data = {
-                "discordId": userDiscord.get('id', None),
-                "video": {
-                    "url": f"{public_path}/{sessionId}.mp4",
-                }
-            }
-            api_endpoint = f"http://10.5.7.20:8017/uploadComplete"
-            try:
-                requests.post(api_endpoint, json=request_data)
-            except:
-                print("BM error!")
+            BadManiac.send_upload_complete(userDiscord.get('id'), public_path, session_id)
 
         if not update_status:
-            responseData = {
+            response_data = {
                 "status": 200,
                 "message": ""
             }
         else:
-            responseData = {
+            response_data = {
                 "status": 500,
                 "message": ""
             }
-        return responseData, 200
+        return response_data, 200

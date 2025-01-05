@@ -14,6 +14,9 @@ from api.data.endpoints.pfsense import PFSenseData
 # Backblaze
 from api.external.backblaze import BackBlazeCDN
 
+# Bad Maniac Discord Bot
+from api.external.badmaniac import BadManiac
+
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import AdminDashboard, OnboardArcade
@@ -128,6 +131,10 @@ def load_config(filename: str) -> None:
     tachi_config = config.get('tachi', {})
     if share_config:
         Integrations.update_config(discord_config, tachi_config)
+
+    badmaniac_config = config.get('bad-maniac', {})
+    if badmaniac_config:
+        BadManiac.update_config(badmaniac_config)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
