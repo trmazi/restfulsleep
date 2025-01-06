@@ -10,6 +10,9 @@ class BaseData():
                 if key == "usergamedata":
                     continue
 
+                if key == "beta":
+                    continue
+
                 if key not in existing_data:
                     existing_data[key] = {}
                 
