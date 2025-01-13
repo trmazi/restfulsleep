@@ -22,6 +22,7 @@ backblaze:
 share:
     upload-endpoint:
     public-path: 
+    upload-tmp-path: './upload_tmp'
 
 discord:
     token-url: 

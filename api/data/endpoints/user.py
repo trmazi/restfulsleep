@@ -81,13 +81,45 @@ class UserData:
             
             return None
             
-    def getUserPin(userId: int) -> str:
+    def getUserContent(sessionId: str, session_type: str) -> dict:
         with MySQLBase.SessionLocal() as session:
-            userPin = session.query(User.pin).filter(User.id == userId).first()
+            user_content = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == session_type).first()
+            
+            if user_content:
+                return {
+                    'id': int(user_content.id),
+                    'userid': int(user_content.userid),
+                    'timestamp': int(user_content.timestamp),
+                    'game': user_content.game,
+                    'version': user_content.version,
+                    'musicid': user_content.musicid,
+                    'sessionId': user_content.sessionid,
+                    'data': JsonEncoded.deserialize(user_content.data)
+                }
+            
+            return None
+
+    def updateUserContentData(sessionId: str, session_type: str, new_data: dict) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            user_content = session.query(UserContent).filter(UserContent.type == session_type, UserContent.sessionid == sessionId).first()
+            if user_content:
+                rawData = JsonEncoded.deserialize(user_content.data, True)
+                error_code = BaseData.update_data(rawData, new_data)
+                if error_code:
+                    return error_code
+            
+                user_content.data = JsonEncoded.serialize(rawData)
+                session.commit()
+            
+            return None
+    
+    def checkUserPin(userId: int, pin: int) -> str:
+        with MySQLBase.SessionLocal() as session:
+            userPin = session.query(User.pin).filter(User.id == userId, User.pin == pin).first()
             if userPin is None:
-                return None
+                return False
             else:
-                return userPin.pin
+                return True
             
     def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None) -> bool:
         with MySQLBase.SessionLocal() as session:

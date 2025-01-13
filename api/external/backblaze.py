@@ -26,3 +26,14 @@ class BackBlazeCDN:
             return True
         else:
             return False
+        
+    def uploadUserContent(self, file: bytes, filepath: str):
+        if self.B2_API:
+            bucket = self.B2_API.get_bucket_by_name(self.bucket)
+            bucket.upload_bytes(
+                    data_bytes=file,
+                    file_name=filepath,
+                )
+            return True
+        else:
+            return False

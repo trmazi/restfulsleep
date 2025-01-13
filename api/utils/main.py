@@ -23,13 +23,13 @@ from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
-from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserPlayVideos
+from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
 from api.services.score import Attempts, Records
 
 # Share server
-from api.services.share import ShareServer, shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload
+from api.services.share import ShareServer, shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload, shareLPACUpload
 
 # Integrations
 from api.services.integrate import Integrations, IntegrateDiscord, IntegrateTachi
@@ -76,6 +76,7 @@ api.add_resource(resetPassword, '/v1/auth/changePassword')
 api.add_resource(UserAccount, '/v1/user')
 api.add_resource(UserUpdatePassword, '/v1/user/updatePassword')
 api.add_resource(UserCard, '/v1/user/card')
+api.add_resource(UserTakeover, '/v1/user/takeover')
 api.add_resource(UserPlayVideos, '/v1/user/playVideos')
 
 # Integration callbacks
@@ -93,12 +94,13 @@ api.add_resource(Music, '/v1/music')
 api.add_resource(Attempts, '/v1/attempts/<game>')
 api.add_resource(Records, '/v1/records')
 
-# Video sharing API
+# Game Upload API
 api.add_resource(shareServerStatus, '/share/server/status')
 api.add_resource(shareNewSession, '/share/sessions/new')
 api.add_resource(shareBeginUpload, '/share/sessions/<sessionId>/videos/<videoId>/begin-upload')
 api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>/<videoId>')
 api.add_resource(shareEndUpload, '/share/sessions/<sessionId>/videos/<videoId>/end-upload')
+api.add_resource(shareLPACUpload, '/share/lpac/<sessionId>')
 
 def load_config(filename: str) -> None:
     global config
