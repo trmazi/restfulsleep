@@ -137,6 +137,7 @@ class shareLPACUpload(Resource):
                             'filename': member.name,
                             'timestamp': int(datetime_object.timestamp()),
                         })
+            os.unlink(upload_path)
         except tarfile.TarError as e:
             return APIConstants.bad_end(e)
         
@@ -148,6 +149,7 @@ class shareLPACUpload(Resource):
                     png_path = f"{extract_path}/{file.get('timestamp')}_{image_id}.png"
                     img.save(png_path, format='PNG')
                     file['filename'] = f"{file.get('timestamp')}_{image_id}.png"
+                os.unlink(filepath)
                     
 
                 with open(png_path, 'rb') as png_file:
@@ -156,6 +158,7 @@ class shareLPACUpload(Resource):
                     if not upload_status:
                         return APIConstants.bad_end('Failed to upload')
                     file['b2_path'] = b2_path
+                os.unlink(png_path)
 
                 filelist[index] = file
 
