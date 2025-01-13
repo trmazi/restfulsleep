@@ -565,3 +565,27 @@ class UserPlayVideos(Resource):
             'status': 'success',
             'data': playVideos
         }
+    
+class UserContent(Resource):
+    '''
+    Handle loading, and deletion of a user's content. Requires the auth header for a user.
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        if request.args.get('type', None):
+            try:
+                contentType = str(request.args.get('type', None))
+            except:
+                return APIConstants.bad_end('Invalid type!')
+        
+        userId = session.get('id', 0)
+
+        userContent = UserData.getAllUserContent(int(userId), contentType)
+
+        return {
+            'status': 'success',
+            'data': userContent
+        }

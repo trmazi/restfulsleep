@@ -80,6 +80,24 @@ class UserData:
                 session.commit()
             
             return None
+
+    def getAllUserContent(userId: int, session_type: str) -> dict:
+        with MySQLBase.SessionLocal() as session:
+            user_contents = session.query(UserContent).filter(UserContent.userid == userId, UserContent.type == session_type).all()
+            
+            sorted_videos = []
+            for user_content in user_contents:
+                sorted_videos.append({
+                    'id': int(user_content.id),
+                    'timestamp': int(user_content.timestamp),
+                    'game': user_content.game,
+                    'version': user_content.version,
+                    'musicid': user_content.musicid,
+                    'sessionId': user_content.sessionid,
+                    'data': JsonEncoded.deserialize(user_content.data)
+                })
+            
+            return sorted_videos
             
     def getUserContent(sessionId: str, session_type: str) -> dict:
         with MySQLBase.SessionLocal() as session:

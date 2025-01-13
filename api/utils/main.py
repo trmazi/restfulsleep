@@ -23,7 +23,7 @@ from api.services.admin import AdminDashboard, OnboardArcade
 from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
-from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos
+from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent
 from api.services.profiles import allPlayers, Profile
 from api.services.music import Music
 from api.services.score import Attempts, Records
@@ -78,6 +78,7 @@ api.add_resource(UserUpdatePassword, '/v1/user/updatePassword')
 api.add_resource(UserCard, '/v1/user/card')
 api.add_resource(UserTakeover, '/v1/user/takeover')
 api.add_resource(UserPlayVideos, '/v1/user/playVideos')
+api.add_resource(UserContent, '/v1/user/content')
 
 # Integration callbacks
 api.add_resource(IntegrateDiscord, '/v1/user/integrate/discord')
