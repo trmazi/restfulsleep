@@ -6,7 +6,9 @@ from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
+from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
+from api.data.endpoints.score import ScoreData
 
 class UserAccount(Resource):
     def get(self):
@@ -431,7 +433,7 @@ class UserTakeover(Resource):
         
         profiles = GameData.getUserGameSettings(claimUserId)
 
-        return {'status': 'success', 'data': profiles}
+        return {'status': 'success', 'data': {'userId': claimUserId, 'profiles': profiles}}
     
     def post(self):
         '''
@@ -440,62 +442,14 @@ class UserTakeover(Resource):
         dataState, data = RequestPreCheck.checkData()
         if not dataState:
             return data
+        
+        userId = None
+        sessionState, session = RequestPreCheck.getSession()
+        if sessionState:
+            userId = session.get('id', None)
 
-        username = None
-        email = None
-        newPassword = None
-        confirmPassword = None
         pin = None
         cardId = None
-
-        if data.get('username', None):
-            try:
-                username = str(data.get('username', None))
-            except:
-                return APIConstants.bad_end('Invalid username!')
-            
-            existingUser = UserData.getUserByName(username)
-            if existingUser:
-                return APIConstants.soft_end('Username already taken.')
-        else:
-            return APIConstants.bad_end('No username provided!')
-
-        if data.get('email', None):
-            try:
-                email = str(data.get('email', None))
-            except:
-                return APIConstants.bad_end('Invalid email!')
-
-            splitEmail = email.split('@')
-            if len(splitEmail) != 2:
-                return APIConstants.bad_end('Invalid email!')
-            
-            if len(splitEmail[1].split('.')) != 2:
-                return APIConstants.bad_end('Invalid email!')
-        else:
-            return APIConstants.bad_end('No email provided!')
-            
-        if data.get('newPassword', None):
-            try:
-                newPassword = str(data.get('newPassword', None))
-            except:
-                return APIConstants.bad_end('Invalid newPassword.')
-        else:
-            return APIConstants.bad_end('No newPassword provided!')
-            
-        if data.get('confirmPassword', None):
-            try:
-                confirmPassword = str(data.get('confirmPassword', None))
-            except:
-                return APIConstants.bad_end('Invalid confirmPassword.')
-        else:
-            return APIConstants.bad_end('No confirmPassword provided!')
-        
-        if len(str(newPassword)) < 8:
-            return APIConstants.soft_end('Password must be at least 8 characters!')
-        
-        if newPassword != confirmPassword:
-            return APIConstants.soft_end('The passwords don\'t match!')
 
         if data.get('pin', None):
             try:
@@ -526,25 +480,35 @@ class UserTakeover(Resource):
         except:
             return APIConstants.soft_end('Bad cardId encoding!')
         
-        userId = UserData.cardExist(cardId)
-        if not userId:
+        if data.get('mergeSettings', None):
+            try:
+                mergeSettings = dict(data.get('mergeSettings'))
+            except:
+                return APIConstants.bad_end('Invalid merge data!')
+        else:
+            return APIConstants.bad_end('No mergeSettings provided!')
+        
+        claimUserId = UserData.cardExist(cardId)
+        if not claimUserId:
             return APIConstants.soft_end('Card is unused!\nPlease play a game to begin registration.')
         
-        user = UserData.getUser(userId)
+        user = UserData.getUser(claimUserId)
         if not user:
             return APIConstants.bad_end('No user found.')
         
         if user.get('username', None):
             return APIConstants.soft_end('User account is already claimed.')
         
-        if not UserData.checkUserPin(userId, pin):
+        if not UserData.checkUserPin(claimUserId, pin):
             return APIConstants.soft_end('PIN mismatch!')
-
-        if not UserData.updateUser(userId, username, email, pin):
-            return APIConstants.bad_end('Failed to update user.')
         
-        if not UserData.updatePassword(userId, newPassword):
-            return APIConstants.bad_end('Failed to update password!')
+        for game in mergeSettings:
+            gameSettings = mergeSettings[game]
+            if gameSettings.get('scores'):
+                try:
+                    ScoreData.transferUserRecords(game, claimUserId, userId)
+                except Exception as e:
+                    return APIConstants.bad_end("Failed to transfer scores")
 
         return {'status': 'success'}
 

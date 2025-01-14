@@ -130,3 +130,43 @@ class ScoreData:
         attempts.sort(key=lambda x: x['timestamp'], reverse=True)
         
         return attempts
+
+    @staticmethod
+    def transferUserRecords(game: str, fromUserId: int, toUserId: int):
+        """
+        Transfers all records and attempts from one userId to another.
+        """
+        with MySQLBase.SessionLocal() as session:
+            musicQuery = (
+                session.query(Music)
+                .filter(Music.game == game)
+                .order_by(Music.songid.desc())
+            )
+            musicData = musicQuery.all()
+            music_ids = [song.id for song in musicData]
+
+            duplicate_scores = (
+                session.query(Score.musicid)
+                .filter(Score.userid == toUserId, Score.musicid.in_(music_ids))
+            ).subquery()
+
+            scores_to_transfer = (
+                session.query(Score)
+                .filter(
+                    Score.userid == fromUserId,
+                    Score.musicid.in_(music_ids),
+                    ~Score.musicid.in_(session.query(duplicate_scores.c.musicid)),
+                )
+            ).all()
+
+            for score in scores_to_transfer:
+                score.userid = toUserId
+                session.add(score)
+
+            (
+                session.query(Attempt)
+                .filter(Attempt.userid == fromUserId, Attempt.musicid.in_(music_ids))
+                .update({Attempt.userid: toUserId}, synchronize_session=False)
+            )
+            
+            session.commit()

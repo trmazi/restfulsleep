@@ -13,6 +13,12 @@ class BaseData():
                 if key == "beta":
                     continue
 
+                if key == "userId":
+                    continue
+
+                if key == "stats":
+                    continue
+
                 if key not in existing_data:
                     existing_data[key] = {}
                 
