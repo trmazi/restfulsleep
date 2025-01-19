@@ -5,13 +5,9 @@ from typing import Any, Dict
 import argparse
 import yaml
 
-# DB Stuff
+# External APIs
 from api.data.mysql import MySQLBase
-
-# PFSense Stuff
-from api.data.endpoints.pfsense import PFSenseData
-
-# Backblaze
+from api.external.pfsense import PFSense
 from api.external.backblaze import BackBlazeCDN
 
 # Bad Maniac Discord Bot
@@ -33,6 +29,13 @@ from api.services.share import ShareServer, shareServerStatus, shareNewSession, 
 
 # Integrations
 from api.services.integrate import Integrations, IntegrateDiscord, IntegrateTachi
+
+# pop'n rhythmin API server
+from api.services.apr.events import APREventInfo, APRFileList
+from api.services.apr.session import APRNewSession, APRSaveSession
+from api.services.apr.music import APRRecommendList, APRPackList
+from api.services.apr.network import APRSearchMaster
+from api.services.apr.user import APRPlayer, APRNewPlayer, APRLinkAccount, APRInvited, APRPresentList
 
 app = Flask(__name__)
 CORS(app)
@@ -103,6 +106,24 @@ api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>/<videoId>')
 api.add_resource(shareEndUpload, '/share/sessions/<sessionId>/videos/<videoId>/end-upload')
 api.add_resource(shareLPACUpload, '/share/lpac/<sessionId>')
 
+# pop'n Rhythmin API
+app.route('/apr/main/cgi/new/index.jsp')
+def new():
+    return {'status': 200}
+
+api.add_resource(APRFileList, f'/apr/main/cgi/get_dl_file_list/index.jsp')
+api.add_resource(APREventInfo, f'/apr/main/cgi/get_event_info/index.jsp')
+api.add_resource(APRNewSession, f'/apr/main/cgi/new/index.jsp')
+api.add_resource(APRSaveSession, f'/apr/main/cgi/save_apns_token/index.jsp')
+api.add_resource(APRPlayer, f'/apr/main/cgi/get_player/index.jsp')
+api.add_resource(APRNewPlayer, f'/apr/main/cgi/new_player/index.jsp')
+api.add_resource(APRLinkAccount, f'/apr/main/cgi/link_kid/index.jsp')
+api.add_resource(APRInvited, f'/apr/main/cgi/invited/index.jsp')
+api.add_resource(APRPresentList, f'/apr/main/cgi/get_present_list/index.jsp')
+api.add_resource(APRRecommendList, f'/apr/main/cgi/get_recommend_list/index.jsp')
+api.add_resource(APRPackList, f'/apr/main/cgi/packlist/index.jsp')
+api.add_resource(APRSearchMaster, f'/apr/main/cgi/search_master/index.jsp')
+
 def load_config(filename: str) -> None:
     global config
 
@@ -116,7 +137,7 @@ def load_config(filename: str) -> None:
 
     pf_config = config.get('pfsense', {})
     if pf_config:
-        PFSenseData.update_config(pf_config)
+        PFSense.update_config(pf_config)
 
     mail_config = config.get('email', {})
     if mail_config:

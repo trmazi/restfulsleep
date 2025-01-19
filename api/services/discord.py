@@ -7,7 +7,7 @@ from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
-from api.data.endpoints.pfsense import PFSenseData
+from api.external.pfsense import PFSense
 
 class OnboardingVPN(Resource):
     '''
@@ -27,7 +27,7 @@ class OnboardingVPN(Resource):
         if not arcade:
             return APIConstants.bad_end('Unable to load the arcade!')
 
-        arcadeConfig = PFSenseData.export_vpn_profile(arcade)
+        arcadeConfig = PFSense.export_vpn_profile(arcade)
         
         if arcadeConfig:
             discordId = request.args.get('discordId')

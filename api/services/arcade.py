@@ -7,7 +7,7 @@ from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
 from api.data.endpoints.paseli import PaseliData
 from api.data.endpoints.user import UserData
-from api.data.endpoints.pfsense import PFSenseData
+from api.external.pfsense import PFSense
 
 class Arcades(Resource):
     '''
@@ -176,7 +176,7 @@ class VPN(Resource):
         if not arcade:
             return APIConstants.bad_end('Unable to load the arcade!')
 
-        arcade_config = PFSenseData.export_vpn_profile(arcade)
+        arcade_config = PFSense.export_vpn_profile(arcade)
         
         if arcade_config:
             return Response(
