@@ -19,6 +19,7 @@ class PFSense:
         'tls-client\n'+
         'client\n'+
         'resolv-retry infinite\n'+
+        'remote 23.162.224.238 1194 udp4\n' +
         'remote 96.82.37.3 1194 udp4\n'+
         'nobind\n'+
         'verify-x509-name "servercert" name\n'+
@@ -27,7 +28,7 @@ class PFSense:
     )
 
     @staticmethod
-    def update_config(pf_config: dict) -> None:
+    def update_config(pf_config: dict) -> None: 
         PFSense.server = pf_config.get('server')
         PFSense.client_id = pf_config.get('client-id')
         PFSense.client_key = pf_config.get('client-key')
