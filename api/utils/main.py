@@ -101,10 +101,10 @@ api.add_resource(Records, '/v1/records')
 # Game Upload API
 api.add_resource(shareServerStatus, '/share/server/status')
 api.add_resource(shareNewSession, '/share/sessions/new')
-api.add_resource(shareBeginUpload, '/share/sessions/<sessionId>/videos/<videoId>/begin-upload')
-api.add_resource(shareVideoUpload, '/share/videoUpload/<sessionId>/<videoId>')
-api.add_resource(shareEndUpload, '/share/sessions/<sessionId>/videos/<videoId>/end-upload')
-api.add_resource(shareLPACUpload, '/share/lpac/<sessionId>')
+api.add_resource(shareBeginUpload, '/share/sessions/<session_id>/videos/<video_id>/begin-upload')
+api.add_resource(shareVideoUpload, '/share/videoUpload/<session_id>/<video_id>')
+api.add_resource(shareEndUpload, '/share/sessions/<session_id>/videos/<video_id>/end-upload')
+api.add_resource(shareLPACUpload, '/share/lpac/<session_id>')
 
 # pop'n Rhythmin API
 app.route('/apr/main/cgi/new/index.jsp')

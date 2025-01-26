@@ -95,7 +95,7 @@ class shareEndUpload(Resource):
         return response_data, 200
     
 class shareLPACUpload(Resource):
-    def post(self, sessionId: str):
+    def post(self, session_id: str):
         upload_content = request.files.get('contentBody', None)
         if not upload_content:
             return APIConstants.bad_end('No content provided.')
@@ -107,7 +107,7 @@ class shareLPACUpload(Resource):
         if len(upload_name.replace('.tar', '').split('_')) != 3:
             return APIConstants.bad_end('Bad file name.')
 
-        session = UserData.getUserContent(sessionId, 'lpac_upload')
+        session = UserData.getUserContent(session_id, 'lpac_upload')
         if not session:
             return APIConstants.bad_end('No session found.')
         
@@ -153,7 +153,7 @@ class shareLPACUpload(Resource):
                     
 
                 with open(png_path, 'rb') as png_file:
-                    b2_path = f"game-upload/{sessionId}/{file['filename']}"
+                    b2_path = f"game-upload/{session_id}/{file['filename']}"
                     upload_status = BackBlazeCDN().uploadUserContent(png_file.read(), b2_path)
                     if not upload_status:
                         return APIConstants.bad_end('Failed to upload')
@@ -162,7 +162,7 @@ class shareLPACUpload(Resource):
 
                 filelist[index] = file
 
-        update_status = UserData.updateUserContentData(sessionId, 'lpac_upload', {'status': 'uploaded', 'filelist': filelist})
+        update_status = UserData.updateUserContentData(session_id, 'lpac_upload', {'status': 'uploaded', 'filelist': filelist})
         if update_status:
             return APIConstants.bad_end('Failed to update data!')
 
