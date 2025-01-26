@@ -67,6 +67,11 @@ class shareVideoUpload(Resource):
             uploadState = BackBlazeCDN().uploadUserVideo(request.data, session_id, video_id)
             if uploadState:
                 return 200
+            else:
+                return {
+                    "status": 500,
+                    "message": "Share server not ready!"
+                }
 
         return 500
 
