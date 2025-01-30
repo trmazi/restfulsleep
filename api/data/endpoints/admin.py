@@ -1,7 +1,7 @@
 from sqlalchemy import func
-
 from api.data.mysql import MySQLBase
 from api.data.types import User, Achievement, Arcade, Audit, Card, EditData, Link, Lobby, Machine, Profile, Score, Attempt
+from api.data.time import Time
 from api.data.json import JsonEncoded
 
 class AdminData:
@@ -16,14 +16,13 @@ class AdminData:
         
         return(stats)
     
-    def getRecentAuditEvents(limit: int = 10) -> list:
+    def getRecentAuditEvents(limit: int = 10, auditType: str = None) -> list:
         with MySQLBase.SessionLocal() as session:
-            recent_events = (
-                session.query(Audit)
-                .order_by(Audit.id.desc())
-                .limit(limit)
-                .all()
-            )
+            auditQuery = session.query(Audit)
+            if auditType:
+                auditQuery = auditQuery.filter(Audit.type == auditType)
+
+            auditQuery = auditQuery.order_by(Audit.id.desc()).limit(limit).all()
             return [
                 {
                     'id': event.id,
@@ -33,5 +32,19 @@ class AdminData:
                     'type': event.type,
                     'data': JsonEncoded.deserialize(event.data)
                 }
-                for event in recent_events
+                for event in auditQuery
             ]
+    
+    def putAuditEvent(auditType: str = None, userid: int = None, arcadeid: int = None, data: dict = {}) -> list:
+        with MySQLBase.SessionLocal() as session:
+            newEvent = Audit()
+            newEvent.timestamp = Time.now()
+            newEvent.type = auditType
+            newEvent.userid = userid
+            newEvent.arcadeid = arcadeid
+            newEvent.data = JsonEncoded.serialize(data)
+
+            session.add(newEvent)
+            session.commit()
+
+            return True

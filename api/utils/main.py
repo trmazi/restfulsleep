@@ -15,7 +15,7 @@ from api.external.badmaniac import BadManiac
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.admin import AdminDashboard, OnboardArcade
+from api.services.admin import AdminDashboard, OnboardArcade, Maintenance
 from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
@@ -52,6 +52,7 @@ api.add_resource(restfulTop, '/')
 # Admin
 api.add_resource(AdminDashboard, '/v1/admin')
 api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
+api.add_resource(Maintenance, '/v1/admin/maint')
 
 # Arcades
 api.add_resource(Arcades, '/v1/arcade/<arcadeId>')

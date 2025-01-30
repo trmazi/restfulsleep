@@ -1,9 +1,9 @@
 import requests
 from flask_restful import Resource
-from flask import request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
+from api.data.time import Time
 from api.data.endpoints.admin import AdminData
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
@@ -83,3 +83,41 @@ class OnboardArcade(Resource):
             MachineData.putMachine(None, newArcade.get('id'), formattedMachine)
 
         return {'status': 'success', 'arcadeId': newArcade.get('id')}
+    
+class Maintenance(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        audit = AdminData.getRecentAuditEvents(40, 'maintenance')
+        return {'status': 'success', 'data': audit}
+    
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        endTimestamp = data.get('endTimestamp', None)
+        if not endTimestamp:
+            return APIConstants.bad_end('No endTimestamp!')
+        formattedEnd = (int(endTimestamp / 1000))
+
+        try:
+            AdminData.putAuditEvent('maintenance', session.get('id', 0), None, {'endTimestamp': formattedEnd, 'reason': data.get('reason', '')})
+        except Exception as e:
+            return APIConstants.bad_end(str(e))
+
+        return {'status': 'success'}
