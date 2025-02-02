@@ -93,7 +93,7 @@ class PFSense:
                 'descr': arcade['name'],
                 'caref': cert_auth.get('refid'),
                 'keytype': 'RSA',
-                'keylen': 1024,
+                'keylen': 2048,
                 'digest_alg': 'sha256',
                 'lifetime': 3650,
                 'dn_commonname': arcade['name'],
