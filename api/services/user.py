@@ -502,15 +502,20 @@ class UserTakeover(Resource):
         if not UserData.checkUserPin(claimUserId, pin):
             return APIConstants.soft_end('PIN mismatch!')
         
+        recordsCount = 0
         for game in mergeSettings:
-            gameSettings = mergeSettings[game]
-            if gameSettings.get('scores'):
-                try:
-                    ScoreData.transferUserRecords(game, claimUserId, userId)
-                except Exception as e:
-                    return APIConstants.bad_end("Failed to transfer scores")
+            if game == 'card':
+               UserData.transferCard(claimUserId, userId, cardId)
 
-        return {'status': 'success'}
+            else:
+                gameSettings = mergeSettings[game]
+                if gameSettings.get('scores'):
+                    try:
+                        recordsCount += ScoreData.transferUserRecords(game, claimUserId, userId)
+                    except Exception as e:
+                        return APIConstants.bad_end("Failed to transfer scores")
+
+        return {'status': 'success', 'count': recordsCount}
 
 class UserPlayVideos(Resource):
     '''

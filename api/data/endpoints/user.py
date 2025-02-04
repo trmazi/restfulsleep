@@ -258,3 +258,13 @@ class UserData:
             session.delete(card)
             session.commit()
             return True
+        
+    def transferCard(fromUserId: int, toUserId: int, cardId: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            card = session.query(Card).filter(Card.id == cardId, Card.userid == fromUserId).first()
+            if not card:
+                return False
+
+            card.userid = toUserId
+            session.commit()
+            return True

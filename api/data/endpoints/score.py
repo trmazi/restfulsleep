@@ -170,3 +170,5 @@ class ScoreData:
             )
             
             session.commit()
+
+        return len(scores_to_transfer)
