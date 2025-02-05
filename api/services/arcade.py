@@ -270,3 +270,92 @@ class CheckPCBID(Resource):
             validArcade = False
         
         return {'status': 'success', 'unused': validArcade}
+    
+class ArcadeTakeover(Resource):
+    '''
+    Claim an already used card. Transfers arcade perms into account
+    '''
+    
+    def get(self):
+        '''
+        Get arcade information, check if arcade is actually unregistered.
+        '''
+        userId = None
+        sessionState, session = RequestPreCheck.getSession()
+        if sessionState:
+            userId = session.get('id', None)
+
+        if not userId:
+            return APIConstants.bad_end('Bad session!')
+
+        PCBID = None
+
+        if request.args.get('PCBID', None):
+            try:
+                PCBID = str(request.args.get('PCBID', None))
+            except:
+                return APIConstants.bad_end('Invalid PCBID!')
+        else:
+            return APIConstants.bad_end('No PCBID provided!')
+        
+        machine = MachineData.fromPCBID(PCBID)
+        if not machine:
+            return APIConstants.bad_end('No machine found!')
+
+        owners = ArcadeData.getArcadeOwners(machine.get('arcadeId', 0))
+        if owners:
+            return APIConstants.bad_end('Arcade already claimed!')
+        
+        if len(owners) != 0:
+            return APIConstants.bad_end('Arcade already claimed!')
+
+        arcade = ArcadeData.getArcade(machine.get('arcadeId', 0))
+        machines = MachineData.getArcadeMachines(machine.get('arcadeId', 0))
+
+        return {'status': 'success', 'data': {'arcade': arcade, 'count': len(machines)}}
+    
+    def post(self):
+        '''
+        Claim an already used card. Transfers user data into account
+        '''
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        userId = None
+        sessionState, session = RequestPreCheck.getSession()
+        if sessionState:
+            userId = session.get('id', None)
+
+        if not userId:
+            return APIConstants.bad_end('Bad session!')
+
+        PCBID = None
+
+        if data.get('PCBID', None):
+            try:
+                PCBID = str(data.get('PCBID', None))
+            except:
+                return APIConstants.bad_end('Invalid PCBID!')
+            
+            if len(PCBID) != 20:
+                return APIConstants.bad_end('PCBID must be 20 characters!')
+        else:
+            return APIConstants.bad_end('No PCBID provided!')
+        
+        machine = MachineData.fromPCBID(PCBID)
+        if not machine:
+            return APIConstants.bad_end('No machine found!')
+
+        owners = ArcadeData.getArcadeOwners(machine.get('arcadeId', 0))
+        if owners:
+            return APIConstants.bad_end('Arcade already claimed!')
+        
+        if len(owners) != 0:
+            return APIConstants.bad_end('Arcade already claimed!')
+
+        saveState = ArcadeData.putArcadeOwner(machine.get('arcadeId', 0), userId)
+        if not saveState:
+            return APIConstants.bad_end('Failed to transfer arcade.')
+
+        return {'status': 'success'}

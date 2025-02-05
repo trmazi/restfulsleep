@@ -140,6 +140,19 @@ class ArcadeData:
                 return None
             
             return [arcade.userid for arcade in arcades]
+        
+    def putArcadeOwner(arcadeId: int, userId: int):
+        with MySQLBase.SessionLocal() as session:
+            try:
+                arcade = ArcadeOwner(userid = userId, arcadeid = arcadeId)
+                session.add(arcade)
+                session.flush()
+            except Exception as e:
+                session.rollback()
+                return False
+
+            session.commit()
+            return True
 
     def getUserArcades(userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:

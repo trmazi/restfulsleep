@@ -16,7 +16,7 @@ from api.external.badmaniac import BadManiac
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
 from api.services.admin import AdminDashboard, OnboardArcade, Maintenance
-from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID
+from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent
@@ -61,6 +61,7 @@ api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
 api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')
 api.add_resource(CheckArcadeName, '/v1/arcade/checkName')
 api.add_resource(CheckPCBID, '/v1/arcade/checkPCBID')
+api.add_resource(ArcadeTakeover, '/v1/arcade/takeover')
 
 # BadManiac Calls
 api.add_resource(OnboardingVPN, '/v1/discord/exportVPN/<arcadeId>')
