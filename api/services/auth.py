@@ -54,7 +54,7 @@ class UserSession(Resource):
             if not decryptedSession:
                 return APIConstants.bad_end('Unable to decrypt SessionId!')
 
-        SessionData.deleteSession(decryptedSession)
+            SessionData.deleteSession(decryptedSession)
         return {'status': 'success'}
     
 class emailAuth(Resource):
