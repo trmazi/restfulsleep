@@ -20,7 +20,6 @@ class PFSense:
         'client\n'+
         'resolv-retry infinite\n'+
         'remote 23.162.224.238 1194 udp4\n' +
-        'remote 96.82.37.3 1194 udp4\n'+
         'nobind\n'+
         'verify-x509-name "servercert" name\n'+
         'remote-cert-tls server\n'+
