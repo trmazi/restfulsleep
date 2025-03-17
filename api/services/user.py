@@ -1,12 +1,11 @@
 from flask import request
 from flask_restful import Resource
 
-from api.constants import APIConstants
+from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
-from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
 from api.data.endpoints.score import ScoreData
 
@@ -558,3 +557,31 @@ class UserContent(Resource):
             'status': 'success',
             'data': userContent
         }
+
+class UserCustomize(Resource):
+    '''
+    Handle updating user preferences for customization.
+    '''
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        session = ValidatedDict(session)
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        data = ValidatedDict(data)
+        
+        userId = session.get_int('id')
+        user = UserData.getUser(userId)
+        if not user:
+            return APIConstants.bad_end('No user found.')
+        
+        customize = data.get_dict('customize')
+        update_state = UserData.updateUserData(userId, {'customize': customize})
+        if update_state:
+            return {'status': 'success'}
+
+        return APIConstants.bad_end('Failed to update customization!')
+    

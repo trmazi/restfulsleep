@@ -7,16 +7,7 @@ class BaseData():
                 if key in existing_data:
                     del existing_data[key]
             elif isinstance(value, dict):
-                if key == "usergamedata":
-                    continue
-
-                if key == "beta":
-                    continue
-
-                if key == "userId":
-                    continue
-
-                if key == "stats":
+                if key in ["usergamedata", "beta", "userId", "stats"]:
                     continue
 
                 if key not in existing_data:
