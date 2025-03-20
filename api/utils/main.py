@@ -9,6 +9,7 @@ import yaml
 from api.data.mysql import MySQLBase
 from api.external.pfsense import PFSense
 from api.external.backblaze import BackBlazeCDN
+from api.external.mailjet import MailjetSMTP
 
 # Bad Maniac Discord Bot
 from api.external.badmaniac import BadManiac
@@ -144,7 +145,7 @@ def load_config(filename: str) -> None:
 
     mail_config = config.get('email', {})
     if mail_config:
-        emailAuth.update_config(mail_config)
+        MailjetSMTP.update_config(mail_config)
 
     b2_config = config.get('backblaze', {})
     if b2_config:

@@ -4,6 +4,7 @@ from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import User, UserContent, Card
 from api.data.data import BaseData
+from api.constants import ValidatedDict
 
 class UserData:
     def validatePassword(plain_password: str, userID: int) -> bool:
@@ -22,14 +23,14 @@ class UserData:
             if user is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': int(user.id),
                     'username': user.username,
                     'email': user.email,
                     'admin': bool(user.admin),
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
-                }
+                })
             
     def getUserPlayVideos(userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:
@@ -37,15 +38,17 @@ class UserData:
             
             sorted_videos = []
             for play_video in play_videos:
-                sorted_videos.append({
-                    'id': int(play_video.id),
-                    'timestamp': int(play_video.timestamp),
-                    'game': play_video.game,
-                    'version': play_video.version,
-                    'musicid': int(play_video.musicid),
-                    'sessionId': play_video.sessionid,
-                    'data': JsonEncoded.deserialize(play_video.data)
-                })
+                sorted_videos.append(
+                    ValidatedDict({
+                        'id': int(play_video.id),
+                        'timestamp': int(play_video.timestamp),
+                        'game': play_video.game,
+                        'version': play_video.version,
+                        'musicid': int(play_video.musicid),
+                        'sessionId': play_video.sessionid,
+                        'data': JsonEncoded.deserialize(play_video.data)
+                    })
+                )
             
             return sorted_videos
         
@@ -54,7 +57,7 @@ class UserData:
             play_video = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == "play_video").first()
             
             if play_video:
-                return {
+                return ValidatedDict({
                     'id': int(play_video.id),
                     'userid': int(play_video.userid),
                     'timestamp': int(play_video.timestamp),
@@ -63,7 +66,7 @@ class UserData:
                     'musicid': int(play_video.musicid),
                     'sessionId': play_video.sessionid,
                     'data': JsonEncoded.deserialize(play_video.data)
-                }
+                })
             
             return None
 
@@ -87,15 +90,17 @@ class UserData:
             
             sorted_videos = []
             for user_content in user_contents:
-                sorted_videos.append({
-                    'id': int(user_content.id),
-                    'timestamp': int(user_content.timestamp),
-                    'game': user_content.game,
-                    'version': user_content.version,
-                    'musicid': user_content.musicid,
-                    'sessionId': user_content.sessionid,
-                    'data': JsonEncoded.deserialize(user_content.data)
-                })
+                sorted_videos.append(
+                    ValidatedDict({
+                        'id': int(user_content.id),
+                        'timestamp': int(user_content.timestamp),
+                        'game': user_content.game,
+                        'version': user_content.version,
+                        'musicid': user_content.musicid,
+                        'sessionId': user_content.sessionid,
+                        'data': JsonEncoded.deserialize(user_content.data)
+                    })
+                )
             
             return sorted_videos
             
@@ -104,7 +109,7 @@ class UserData:
             user_content = session.query(UserContent).filter(UserContent.sessionid == sessionId, UserContent.type == session_type).first()
             
             if user_content:
-                return {
+                return ValidatedDict({
                     'id': int(user_content.id),
                     'userid': int(user_content.userid),
                     'timestamp': int(user_content.timestamp),
@@ -113,7 +118,7 @@ class UserData:
                     'musicid': user_content.musicid,
                     'sessionId': user_content.sessionid,
                     'data': JsonEncoded.deserialize(user_content.data)
-                }
+                })
             
             return None
 
@@ -164,7 +169,7 @@ class UserData:
 
                 return False
             
-    def updateUserData(userId: int, new_data: dict) -> bool:
+    def updateUserData(userId: int, new_data: ValidatedDict) -> bool:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
             if user is None:
@@ -202,13 +207,13 @@ class UserData:
             if user is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': int(user.id),
                     'username': user.username,
                     'admin': bool(user.admin),
                     'banned': bool(user.banned),
                     'data': JsonEncoded.deserialize(user.data)
-                }
+                })
     
     def getUserByEmail(email: str) -> dict:
         with MySQLBase.SessionLocal() as session:
@@ -216,12 +221,12 @@ class UserData:
             if user is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': user.id,
                     'username': user.username,
                     'email': user.email,
                     'banned': bool(user.banned),
-                }
+                })
 
     def getCards(userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:

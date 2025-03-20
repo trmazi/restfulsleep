@@ -1,11 +1,11 @@
 from flask import request
-from typing import Tuple, Dict
-from api.constants import APIConstants
+from typing import Tuple
+from api.constants import APIConstants, ValidatedDict
 from api.data.endpoints.session import SessionData
 from api.data.endpoints.user import UserData
 
 class RequestPreCheck():
-    def getSession() -> Tuple[bool, Dict]:
+    def getSession() -> Tuple[bool, ValidatedDict]:
         '''
         Checks a user's session via a their auth key. Key is sent in headers as `User-Auth-Key`.
         Returns a tuple of a bool representing session state and a dict containing either a session or an error code.
@@ -29,7 +29,7 @@ class RequestPreCheck():
         
         return (True, session)
     
-    def checkAdmin(session: Dict) -> Tuple[bool, Dict]:
+    def checkAdmin(session: ValidatedDict) -> Tuple[bool, ValidatedDict]:
         '''
         Check if a user is an admin. Returns a bool and a response dict.
         '''
@@ -41,12 +41,29 @@ class RequestPreCheck():
         
         return (True, None)
     
-    def checkData() -> Tuple[bool, Dict]:
+    def checkData(keys: dict[str, type] = {}) -> Tuple[bool, "ValidatedDict"]:
         '''
-        Check if JSON data was sent. If data is found, return it.
+        Check if JSON data was sent. If found, return it as a ValidatedDict.
+
+        Optionally can be given a dict of {key: type} to check for specific elements.
+        Returns an error for the missing/incorrect keys.
         '''
         data = request.get_json(silent=True)
-        if data == None:
-            return (False, APIConstants.bad_end('No json data was sent!'))
+        if data is None:
+            return False, APIConstants.bad_end("No JSON data was sent!")
 
-        return (True, data)
+        data = ValidatedDict(data)
+
+        type_getters = {
+            str: data.get_str,
+            int: data.get_int,
+            bool: data.get_bool,
+            bytes: data.get_bytes,
+        }
+
+        for key, key_type in keys.items():
+            getter = type_getters.get(key_type)
+            if getter and getter(key) is None:
+                return False, APIConstants.bad_end(f"{key}: {key_type.__name__} not found!")
+
+        return True, data
