@@ -21,7 +21,7 @@ from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcad
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize
-from api.services.profiles import allPlayers, Profile
+from api.services.profiles import allPlayers, Profile, Achievements
 from api.services.music import Music
 from api.services.score import Attempts, Records
 
@@ -94,6 +94,7 @@ api.add_resource(IntegrateTachi, '/v1/user/integrate/tachi')
 # Game Data
 api.add_resource(allPlayers, '/v1/game/<game>/profiles')
 api.add_resource(Profile, '/v1/profile/<game>')
+api.add_resource(Achievements, '/v1/profile/<game>/achievements')
 
 # Music DB Data
 api.add_resource(Music, '/v1/music')

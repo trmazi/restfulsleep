@@ -2,9 +2,10 @@ from flask_restful import Resource
 from flask import request
 import concurrent.futures
 
-from api.constants import APIConstants
+from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
 from api.data.endpoints.profiles import ProfileData
+from api.data.endpoints.achievements import AchievementData
 from api.data.endpoints.game import GameData
 
 class allPlayers(Resource):
@@ -88,4 +89,50 @@ class Profile(Resource):
         
         return {
             'status': 'success'
+        }, 200
+    
+class Achievements(Resource):
+    def get(self, game: str):
+        args = ValidatedDict(request.args)
+
+        version = int(args.get_str('version'))
+        userId = int(args.get_str('userId'))
+        header_value = request.headers.get('achievements', None)
+
+        try:
+            if header_value:
+                achievements = [
+                    (name, int(score)) for name, score in 
+                    (item.split(':') for item in header_value.split(','))
+                ]
+            else:
+                achievements = []
+        except Exception as e:
+            return APIConstants.bad_end(f'`achievements`: {e}')
+
+        if not userId:
+            return APIConstants.bad_end('No userId!')
+        
+        if not achievements:
+            return APIConstants.bad_end('`achievements: list[str: int]` needs to be supplied in headers. The format is `achievementType:achievementId,`')
+        
+        versions = ProfileData.getVersions(game, userId)
+        if not version or version == 'null' and versions:
+            version = versions[-1] if len(versions) > 1 else versions[0]
+
+        loadedAchievements = []
+        try:
+            for achievementType, achievementId in achievements:
+                achievement = AchievementData.getAchievement(game, version, userId, achievementType, achievementId)
+                loadedAchievements.append({
+                    'achievementType': achievementType,
+                    'achievementId': achievementId,
+                    'data': achievement,
+                })
+        except:
+            return APIConstants.bad_end('Failed to parse `achievements: list[str: int]` from headers')
+        
+        return {
+            'status': 'success',
+            'data': loadedAchievements
         }, 200
