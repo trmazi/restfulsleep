@@ -6,6 +6,7 @@ from api.data.mysql import MySQLBase
 from api.data.cache import LocalCache
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
+from api.data.endpoints.music import MusicData
 
 class Scheduler:
     @staticmethod
@@ -67,6 +68,10 @@ class Scheduler:
                             profileData.append(result)
                 LocalCache().putCachedData(cacheName, profileData)
                 print(f'[RestfulCache] Cached {len(profileData)} profiles for {game}')
+
+            # Make a cache of music data for this game
+            musicData = MusicData.getAllMusic(game)
+            print(f'[RestfulCache] Cached {len(musicData)} musicIds for {game}')
 
 parser = argparse.ArgumentParser(description="A scheduler for work that needs to be done periodically.")
 parser.add_argument("-c", "--config", help="Core configuration. Defaults to config.yaml", type=str, default="config.yaml")
