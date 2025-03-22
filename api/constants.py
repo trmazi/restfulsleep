@@ -15,6 +15,44 @@ class APIConstants:
     def soft_end(error: str) -> dict:
         return {'status': 'warn', 'error_code': error}
     
+class GameConstants:
+    BEATSTREAM = 'bst'
+    BISHI_BASHI = 'bishi'
+    BISHI_BASHI_NEW = 'newbishi'
+    DANCE_EVOLUTION = 'danevo'
+    DANCE_RUSH = 'dancerush'
+    DDR = 'ddr'
+    DDRCLASS = 'ddrclass'
+    DDROMNI = 'ddromni'
+    DRUMMANIA = 'dm'
+    EEMALL = 'eemall'
+    FUTURETOMTOM = 'ftt'
+    GITADORA_DM = 'gitadora_dm'
+    GITADORA_GF = 'gitadora_gf'
+    GUITARFREAKS = 'gf'
+    IIDX = 'iidx'
+    IIDXCLASS = 'iidxclass'
+    JUBEAT = 'jubeat'
+    LOVEPLUS = 'loveplus'
+    MGA = 'metalgear'
+    MUSECA = 'museca'
+    NOSTALGIA = 'nost'
+    OTOMEDIUS = 'oto'
+    OTOCA = 'otoca'
+    POPN_HELLO = 'hpm'
+    POPN_MUSIC = 'pnm'
+    QMA = 'qma'
+    REFLEC_BEAT = 'reflec'
+    ROAD_FIGHTERS = 'roadfighters'
+    SDVX = 'sdvx'
+    SILENT_HILL = 'sha'
+    SILENT_SCOPE = 'scope'
+    TSUMTSUM = 'tsum'
+    WINNING_ELEVEN = 'weac'
+    SCOTTO = 'scotto'
+    PASELI = 'paseli'
+    MFC = 'mahjong'
+    
 class ValidatedDict(dict):
     """
     ValidatedDict is the amazing work Dragonminded. 100% of this code is her work.

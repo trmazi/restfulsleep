@@ -3,6 +3,10 @@ database:
   user: 
   pass: 
 
+cache:
+  cache_path: /var/restfulcache
+  expiration: 300000
+
 pfsense:
     server: 
     client-id: 

@@ -10,6 +10,7 @@ from api.data.mysql import MySQLBase
 from api.external.pfsense import PFSense
 from api.external.backblaze import BackBlazeCDN
 from api.external.mailjet import MailjetSMTP
+from api.data.cache import LocalCache
 
 # Bad Maniac Discord Bot
 from api.external.badmaniac import BadManiac
@@ -164,6 +165,10 @@ def load_config(filename: str) -> None:
     badmaniac_config = config.get('bad-maniac', {})
     if badmaniac_config:
         BadManiac.update_config(badmaniac_config)
+
+    cacheConfig = config.get('cache', {})
+    if cacheConfig:
+        LocalCache.updateConfig(cacheConfig)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")

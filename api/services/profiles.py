@@ -7,6 +7,7 @@ from api.precheck import RequestPreCheck
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.achievements import AchievementData
 from api.data.endpoints.game import GameData
+from api.data.cache import LocalCache
 
 class allPlayers(Resource):
     def process_profile(self, profile, extIds, stats):
@@ -18,22 +19,26 @@ class allPlayers(Resource):
         return profile
 
     def get(self, game: str):
-        data = []
+        cacheName = f'juiced_profiles_{game}'
+        profileData = LocalCache().getCachedData(cacheName)
 
-        profiles = ProfileData.getPlayers(game)
-        extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
-        stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
+        if not profileData:
+            profileData = []
+            profiles = ProfileData.getPlayers(game)
+            extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
+            stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
 
-        with concurrent.futures.ProcessPoolExecutor() as executor:
-            futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
-            for future in concurrent.futures.as_completed(futures):
-                result = future.result()
-                if result is not None:
-                    data.append(result)
+            with concurrent.futures.ProcessPoolExecutor() as executor:
+                futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
+                for future in concurrent.futures.as_completed(futures):
+                    result = future.result()
+                    if result is not None:
+                        profileData.append(result)
+            LocalCache().putCachedData(cacheName, profileData)
 
         return {
             'status': 'success',
-            'data': data
+            'data': profileData
         }, 200
 
 class Profile(Resource):
