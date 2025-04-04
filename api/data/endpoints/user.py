@@ -17,7 +17,7 @@ class UserData:
             except (ValueError, TypeError):
                 return False
 
-    def getUser(userId: int) -> dict:
+    def getUser(userId: int) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
             if user is None:

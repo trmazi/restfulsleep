@@ -8,21 +8,34 @@ from api.data.data import BaseData
 
 class ProfileData:
     @staticmethod
-    def getPlayers(game: str) -> List[Dict[str, Any]]:
-        with MySQLBase.SessionLocal() as session:
-            # Step 1: Retrieve all user IDs for all versions of the specified game
-            userIds: Set[int] = set()
-
-            versions = session.query(distinct(Refid.version)).filter(Refid.game == game).all()
-            for version in versions:
-                version_userIds = session.query(Refid.userId).filter(
+    def getPlayers(game: str, version: int = None) -> List[Dict[str, Any]]:
+        def fetch_profile_for_version(userId: int, version: int) -> Dict[str, Any]:
+            with MySQLBase.SessionLocal() as session:
+                refid_query = session.query(Refid).filter(
+                    Refid.userId == userId,
                     Refid.game == game,
-                    Refid.version == version[0],
-                    (Refid.version < 10000) | (Refid.version >= 20000)  # Exclude versions with the bump
-                ).all()
+                    Refid.version == version
+                ).first()
 
-                filtered_userIds = (userId for (userId,) in version_userIds)
-                userIds.update(filtered_userIds)
+                if refid_query:
+                    profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
+
+                    if profile:
+                        rawData = JsonEncoded.deserialize(profile.data)
+                        return {
+                            'userId': userId,
+                            'maxVersion': refid_query.version,
+                            'username': rawData.get('username', rawData.get('name', '')),
+                            'sgrade': rawData.get('sgrade', None),
+                            'dgrade': rawData.get('dgrade', None),
+                            'block': rawData.get('block', None),
+                            'packet': rawData.get('packet', None),
+                            'skill_level': rawData.get('skill_level', None),
+                            'jubility': (rawData.get('jubility', 0)) / 10,
+                            'profile_skill': (rawData.get('profile_skill', 0)) / 100,
+                            'skill': (rawData.get('skill', 0)) / 100,
+                        }
+            return None
 
         def fetch_latest_profile(userId: int) -> Dict[str, Any]:
             with MySQLBase.SessionLocal() as session:
@@ -52,16 +65,43 @@ class ProfileData:
                         }
             return None
 
-        # Step 2: Get the latest profile information for each user in parallel
-        latest_profiles = []
+        with MySQLBase.SessionLocal() as session:
+            userIds: Set[int] = set()
+
+            if version is not None:
+                # Only get user IDs for the specific version
+                version_userIds = session.query(Refid.userId).filter(
+                    Refid.game == game,
+                    Refid.version == version
+                ).all()
+                userIds.update(userId for (userId,) in version_userIds)
+            else:
+                # Get all user IDs for all valid versions (excluding bumps)
+                versions = session.query(distinct(Refid.version)).filter(Refid.game == game).all()
+                for version_row in versions:
+                    v = version_row[0]
+                    if v >= 10000 and v < 20000:
+                        continue  # skip bump versions
+                    version_userIds = session.query(Refid.userId).filter(
+                        Refid.game == game,
+                        Refid.version == v
+                    ).all()
+                    userIds.update(userId for (userId,) in version_userIds)
+
+        # Step 2: Get profile information in parallel
+        profiles = []
         with ThreadPoolExecutor(max_workers=10) as executor:
-            futures = [executor.submit(fetch_latest_profile, userId) for userId in userIds]
+            if version is not None:
+                futures = [executor.submit(fetch_profile_for_version, userId, version) for userId in userIds]
+            else:
+                futures = [executor.submit(fetch_latest_profile, userId) for userId in userIds]
+
             for future in as_completed(futures):
                 profile_info = future.result()
                 if profile_info:
-                    latest_profiles.append(profile_info)
+                    profiles.append(profile_info)
 
-        return latest_profiles
+        return profiles
         
     def getProfile(game: str, version: int, userId: int, noData: bool = False) -> dict:
         with MySQLBase.SessionLocal() as session:

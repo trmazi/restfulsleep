@@ -585,3 +585,35 @@ class UserCustomize(Resource):
 
         return APIConstants.bad_end('Failed to update customization!')
     
+class UserAppVersion(Resource):
+    '''
+    Handle updating user preferences for update popups.
+    '''
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        session = ValidatedDict(session)
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        data = ValidatedDict(data)
+        
+        userId = session.get_int('id')
+        user = UserData.getUser(userId)
+        if not user:
+            return APIConstants.bad_end('No user found.')
+        
+        version = data.get_str('version')
+        disable = data.get_bool('disable')
+
+        webVersions = user.get_dict('data').get('webVersions', [])
+        webVersions.append(version)
+
+        update_state = UserData.updateUserData(userId, {'webVersions': webVersions, 'disableUpdateModal': disable})
+        if update_state:
+            return {'status': 'success'}
+
+        return APIConstants.bad_end('Failed to update!')
+    

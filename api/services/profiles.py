@@ -19,12 +19,25 @@ class allPlayers(Resource):
         return profile
 
     def get(self, game: str):
+        argsState, args = RequestPreCheck.checkArgs({
+            'version': str
+        })
+
+        if argsState:
+            try:
+                version = int(args.get_str('version'))
+            except:
+                version = None
+        
         cacheName = f'juiced_profiles_{game}'
-        profileData = LocalCache().getCachedData(cacheName)
+        if not version:
+            profileData = LocalCache().getCachedData(cacheName)
+        else:
+            profileData = None
 
         if not profileData:
             profileData = []
-            profiles = ProfileData.getPlayers(game)
+            profiles = ProfileData.getPlayers(game, version)
             extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
             stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
 
@@ -34,7 +47,9 @@ class allPlayers(Resource):
                     result = future.result()
                     if result is not None:
                         profileData.append(result)
-            LocalCache().putCachedData(cacheName, profileData)
+
+            if not version:
+                LocalCache().putCachedData(cacheName, profileData)
 
         return {
             'status': 'success',

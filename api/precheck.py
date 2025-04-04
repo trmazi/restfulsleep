@@ -41,7 +41,7 @@ class RequestPreCheck():
         
         return (True, None)
     
-    def checkData(keys: dict[str, type] = {}) -> Tuple[bool, "ValidatedDict"]:
+    def checkData(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
         '''
         Check if JSON data was sent. If found, return it as a ValidatedDict.
 
@@ -51,6 +51,33 @@ class RequestPreCheck():
         data = request.get_json(silent=True)
         if data is None:
             return False, APIConstants.bad_end("No JSON data was sent!")
+
+        data = ValidatedDict(data)
+
+        type_getters = {
+            str: data.get_str,
+            int: data.get_int,
+            bool: data.get_bool,
+            bytes: data.get_bytes,
+        }
+
+        for key, key_type in keys.items():
+            getter = type_getters.get(key_type)
+            if getter and getter(key) is None:
+                return False, APIConstants.bad_end(f"{key}: {key_type.__name__} not found!")
+
+        return True, data
+    
+    def checkArgs(keys: dict[str, type] = {}) -> Tuple[bool, ValidatedDict]:
+        '''
+        Check if args were sent. If found, return them as a ValidatedDict.
+
+        Optionally can be given a dict of {key: type} to check for specific elements.
+        Returns an error for the missing/incorrect keys.
+        '''
+        data = request.args
+        if data is None:
+            return False, APIConstants.bad_end("No args sent!")
 
         data = ValidatedDict(data)
 
