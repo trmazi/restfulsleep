@@ -1,6 +1,10 @@
 import requests
+from io import BytesIO
 from typing import Dict, Any
 from api.constants import APIConstants
+from api.data.endpoints.arcade import ArcadeData
+from api.data.endpoints.machine import MachineData
+from api.external.pfsense import PFSense
 
 class BadManiac:
     BM_URL = None
@@ -18,8 +22,8 @@ class BadManiac:
         }
         try:
             requests.post(f"{BadManiac.BM_URL}/successfulLink", json=request_data, headers={"X-API-Key": BadManiac.BM_KEY})
-        except:
-            return APIConstants.bad_end('fuck')
+        except requests.RequestException as e:
+            return APIConstants.bad_end(str(e))
 
     @staticmethod
     def send_upload_complete(discord_id: str, video_path: str, session_id: str):
@@ -31,5 +35,65 @@ class BadManiac:
         }
         try:
             requests.post(f"{BadManiac.BM_URL}/uploadComplete", json=request_data, headers={"X-API-Key": BadManiac.BM_KEY})
+        except requests.RequestException as e:
+            return APIConstants.bad_end(str(e))
+        
+    @staticmethod
+    def getDiscordMember(discordId: str):
+        try:
+            response = requests.get(f"{BadManiac.BM_URL}/member/{discordId}", headers={"X-API-Key": BadManiac.BM_KEY})
+            return response.json()
         except:
-            return APIConstants.bad_end('fuck')
+            return None
+        
+    @staticmethod
+    def sendArcadeOnboarding(discordId: str, arcadeId: int):
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+        
+        arcadeData = arcade.get("data", {})
+        requestData = {
+            "discordId": discordId,
+            "arcade": {
+                "id": arcade.get("id"),
+                "name": arcade.get("name"),
+                "description": arcade.get("description"),
+                "paseli": bool(arcadeData.get("paseli_enabled", False)),
+                "infinitePaseli": bool(arcadeData.get("paseli_infinite", False)),
+                "maintenance": bool(arcadeData.get("maint", False)),
+                "betas": bool(arcadeData.get("is_beta", False)),
+                "incognito": bool(arcadeData.get("hide_network", False)),
+                "machineList": MachineData.getArcadeMachines(arcadeId)
+            }
+        }
+
+        print(BadManiac.BM_KEY)
+
+        try:
+            requests.post(f"{BadManiac.BM_URL}/onboardArcade", json=requestData, headers={"X-API-Key": BadManiac.BM_KEY})
+            return None
+        except requests.RequestException as e:
+            return APIConstants.bad_end(str(e))
+        
+    @staticmethod
+    def sendArcadeVPN(discordId: str, arcadeId: int):
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return APIConstants.bad_end('Unable to load the arcade!')
+
+        arcadeConfig = PFSense.export_vpn_profile(arcade)
+        if not arcadeConfig:
+            return APIConstants.bad_end("Failed to generate VPN profile!")
+
+        fileContent = ''.join(list(arcadeConfig[0])).encode('utf-8')
+        fileName = f"gradius-{arcadeConfig[1]}-phaseii-config.ovpn"
+        files = {
+            'vpnFile': (fileName, BytesIO(fileContent), 'text/plain')
+        }
+
+        try:
+            requests.post(f"{BadManiac.BM_URL}/sendVPNProfile/{discordId}", files=files, headers={"X-API-Key": BadManiac.BM_KEY})
+            return None
+        except requests.RequestException as e:
+            return APIConstants.bad_end(str(e))

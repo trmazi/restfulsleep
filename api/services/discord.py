@@ -1,13 +1,11 @@
 import requests
-from io import BytesIO
 from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.endpoints.arcade import ArcadeData
-from api.data.endpoints.machine import MachineData
-from api.external.pfsense import PFSense
+from api.external.badmaniac import BadManiac
 
 class OnboardingVPN(Resource):
     '''
@@ -26,35 +24,16 @@ class OnboardingVPN(Resource):
         arcade = ArcadeData.getArcade(arcadeId)
         if not arcade:
             return APIConstants.bad_end('Unable to load the arcade!')
-
-        arcadeConfig = PFSense.export_vpn_profile(arcade)
         
-        if arcadeConfig:
-            discordId = request.args.get('discordId')
-            if not discordId:
-                return APIConstants.bad_end('No Discord ID!')
-
-            file_content = ''.join(list(arcadeConfig[0])).encode('utf-8')
-            file_name = f"gradius-{arcadeConfig[1]}-phaseii-config.ovpn"
-            files = {
-                'vpnFile': (file_name, BytesIO(file_content), 'text/plain')
-            }
-
-            api_endpoint = f"http://10.5.7.20:8017/sendVPNProfile/{discordId}"
-
-            try:
-                response = requests.post(api_endpoint, files=files)
-
-                if response.status_code == 200:
-                    return {'status': 'success'}
-                else:
-                    return APIConstants.bad_end(f"Failed to upload file. Status code: {response.status_code}")
-            
-            except requests.RequestException as e:
-                return APIConstants.bad_end(f"Error during upload: {str(e)}")
+        discordId = request.args.get('discordId')
+        if not discordId:
+            return APIConstants.bad_end('No Discord ID!')
         
+        failedResponse = BadManiac.sendArcadeVPN(discordId, arcadeId)
+        if failedResponse == None:
+            return {'status': 'success'}
         else:
-            return APIConstants.bad_end('Failed to export!')
+            return failedResponse
         
 class OnboardingArcade(Resource):
     '''
@@ -69,42 +48,15 @@ class OnboardingArcade(Resource):
         adminState, errorCode = RequestPreCheck.checkAdmin(session)
         if not adminState:
             return errorCode
-        
-        arcade = ArcadeData.getArcade(arcadeId)
-        if not arcade:
-            return APIConstants.bad_end('Unable to load the arcade!')
-        
-        arcadeData = arcade.get("data", {})
-        
+
         discordId = request.args.get('discordId')
         if not discordId:
             return APIConstants.bad_end('No Discord ID!')
-
-        request_data = {
-            "discordId": discordId,
-            "arcade": {
-                "id": arcade.get("id"),
-                "name": arcade.get("name"),
-                "description": arcade.get("description"),
-                "paseli": bool(arcadeData.get("paseli_enabled", False)),
-                "infinitePaseli": bool(arcadeData.get("paseli_infinite", False)),
-                "maintenance": bool(arcadeData.get("maint", False)),
-                "betas": bool(arcadeData.get("is_beta", False)),
-                "incognito": bool(arcadeData.get("hide_network", False)),
-                "machineList": MachineData.getArcadeMachines(arcadeId)
-            }
-        }
-
-        api_endpoint = f"http://10.5.7.20:8017/onboardArcade"
-
-        try:
-            response = requests.post(api_endpoint, json=request_data)
-
-            if response.status_code == 200:
-                return {'status': 'success', 'data': request_data}
-            else:
-                return APIConstants.bad_end(f"Failed to onboard. Status code: {response.status_code}")
         
-        except requests.RequestException as e:
-            return APIConstants.bad_end(f"Error during onboard: {str(e)}")
+        failedResponse = BadManiac.sendArcadeOnboarding(discordId, arcadeId)
+        print(failedResponse)
+        if failedResponse == None:
+            return {'status': 'success'}
+        else:
+            return failedResponse
         

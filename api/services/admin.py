@@ -3,10 +3,10 @@ from flask_restful import Resource
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
-from api.data.time import Time
 from api.data.endpoints.admin import AdminData
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
+from api.external.badmaniac import BadManiac
 
 class AdminDashboard(Resource):
     def get(self):
@@ -55,18 +55,12 @@ class OnboardArcade(Resource):
 
         if bool(data['useDiscord']):
             discordId = int(data['discordId'])
-            api_endpoint = f"http://10.5.7.20:8017/member/{discordId}"
 
-            try:
-                response = requests.get(api_endpoint)
-                if response.status_code != 200:
-                    return APIConstants.bad_end(f"Failed to onboard. Status code: {response.status_code}")
-                
-            except requests.RequestException as e:
-                return APIConstants.bad_end(f"Error during onboard: {str(e)}")
-            
-            responseData = response.json()
-            formattedArcade['description'] = f"{responseData['username']}'s Arcade"
+            memberData = BadManiac.getDiscordMember(discordId)
+            if not memberData:
+                return APIConstants.bad_end(f'Failed to get user\'s Discord account.')
+
+            formattedArcade['description'] = f"{memberData['username']}'s Arcade"
             
         newArcade = ArcadeData.putArcade(None, formattedArcade)
         
