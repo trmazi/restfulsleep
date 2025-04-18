@@ -1,13 +1,21 @@
 import random
 import time
-
+from typing import Dict, Any
 from api.data.aes import AESCipher
 from api.data.types import Session
 from api.data.mysql import MySQLBase
 from api.constants import ValidatedDict
 
 class SessionData:
-    AES = AESCipher('restful_crypto_that_shouldnt_be_hardcoded')
+    AES = None
+
+    @staticmethod
+    def updateConfig(cryptoConfig: Dict[str, Any]) -> None:
+        key = cryptoConfig.get('cookie_key', None)
+        if not key:
+            raise Exception("Failed to initialize cookie encryption.")
+        
+        SessionData.AES = AESCipher(key)
 
     def createSession(opId: int, opType: str, expiration: int=(30 * 86400)) -> str:
         session_token = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))

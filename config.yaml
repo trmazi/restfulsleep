@@ -7,6 +7,9 @@ cache:
   cache_path: /var/restfulcache
   expiration: 300000
 
+crypto:
+  cookie_key:
+
 pfsense:
     server: 
     client-id: 
