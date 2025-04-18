@@ -7,17 +7,18 @@ import yaml
 
 # External APIs
 from api.data.mysql import MySQLBase
+from api.data.cache import LocalCache
+from api.data.endpoints.session import SessionData
 from api.external.pfsense import PFSense
 from api.external.backblaze import BackBlazeCDN
 from api.external.mailjet import MailjetSMTP
-from api.data.cache import LocalCache
 
 # Bad Maniac Discord Bot
 from api.external.badmaniac import BadManiac
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.admin import AdminDashboard, OnboardArcade, Maintenance
+from api.services.admin import AdminDashboard, OnboardArcade, Maintenance, Client
 from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
@@ -55,6 +56,7 @@ api.add_resource(restfulTop, '/')
 api.add_resource(AdminDashboard, '/v1/admin')
 api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
 api.add_resource(Maintenance, '/v1/admin/maint')
+api.add_resource(Client, '/v1/admin/client')
 
 # Arcades
 api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
@@ -131,56 +133,41 @@ api.add_resource(APRRecommendList, f'/apr/main/cgi/get_recommend_list/index.jsp'
 api.add_resource(APRPackList, f'/apr/main/cgi/packlist/index.jsp')
 api.add_resource(APRSearchMaster, f'/apr/main/cgi/search_master/index.jsp')
 
-def load_config(filename: str) -> None:
+def loadConfigs(filename: str) -> None:
     global config
 
     with open(filename, 'r') as file:
         config.update(yaml.safe_load(file))
 
-    # Update the MySQLBase engine with the new connection string
-    db_config = config.get('database', {})
-    if db_config:
-        MySQLBase.update_connection(db_config)
+    config_map = {
+        'database': MySQLBase.updateConfig,
+        'cache': LocalCache.updateConfig,
+        'crypto': SessionData.updateConfig,
+        'pfsense': PFSense.updateConfig,
+        'email': MailjetSMTP.updateConfig,
+        'backblaze': BackBlazeCDN.updateConfig,
+        'share': ShareServer.updateConfig,
+        'bad-maniac': BadManiac.updateConfig,
+    }
 
-    pf_config = config.get('pfsense', {})
-    if pf_config:
-        PFSense.update_config(pf_config)
+    for key, updater in config_map.items():
+        section = config.get(key, {})
+        if section:
+            updater(section)
 
-    mail_config = config.get('email', {})
-    if mail_config:
-        MailjetSMTP.update_config(mail_config)
-
-    b2_config = config.get('backblaze', {})
-    if b2_config:
-        BackBlazeCDN.update_config(b2_config)
-
-    share_config = config.get('share', {})
-    if share_config:
-        ShareServer.update_config(share_config)
-
-    discord_config = config.get('discord', {})
-    tachi_config = config.get('tachi', {})
-    if share_config:
-        Integrations.update_config(discord_config, tachi_config)
-
-    badmaniac_config = config.get('bad-maniac', {})
-    if badmaniac_config:
-        BadManiac.update_config(badmaniac_config)
-
-    cacheConfig = config.get('cache', {})
-    if cacheConfig:
-        LocalCache.updateConfig(cacheConfig)
+    # Special handling for integrations
+    discordConfig = config.get('discord', {})
+    tachiConfig = config.get('tachi', {})
+    if config.get('share', {}):
+        Integrations.updateConfig(discordConfig, tachiConfig)
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="PhaseII's powerful API, RestfulSleep. Built with Flask and restful.")
     parser.add_argument("-p", "--port", help="Port to listen on. Defaults to 8000", type=int, default=8000)
     parser.add_argument("-c", "--config", help="Path to configuration file. Defaults to 'config.yaml'", type=str, default='config.yaml')
     args = parser.parse_args()
+    loadConfigs(args.config)
 
-    # Load configuration
-    load_config(args.config)
-
-    # Run the app
     app.run(host='0.0.0.0', port=args.port, debug=True)
 
 if __name__ == '__main__':

@@ -27,7 +27,7 @@ class PFSense:
     )
 
     @staticmethod
-    def update_config(pf_config: dict) -> None: 
+    def updateConfig(pf_config: dict) -> None: 
         PFSense.server = pf_config.get('server')
         PFSense.client_id = pf_config.get('client-id')
         PFSense.client_key = pf_config.get('client-key')

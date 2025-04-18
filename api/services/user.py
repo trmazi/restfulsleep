@@ -8,6 +8,7 @@ from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.game import GameData
 from api.data.endpoints.score import ScoreData
+from api.external.badmaniac import BadManiac
 
 class UserAccount(Resource):
     def get(self):
@@ -19,26 +20,29 @@ class UserAccount(Resource):
         if not userId:
             return APIConstants.bad_end('No userId provided')
 
-        user = UserData.getUser(int(userId))
+        user: ValidatedDict = UserData.getUser(int(userId))
         if not user:
             return APIConstants.bad_end('No user found.')
 
         authUser = False;
+        session: ValidatedDict
         sessionState, session = RequestPreCheck.getSession()
         if sessionState:
-            if user.get('id', 0) == session.get('id', -1):
-                if user.get('banned', False):
+            if user.get_int('id') == session.get_int('id', -1):
+                if user.get_bool('banned'):
                     return APIConstants.bad_end('You have been banned.')
                 authUser = True
 
-        if user.get('banned', False):
+        if user.get_bool('banned'):
             return APIConstants.bad_end('This user is banned.')
 
-        userData = user.get('data', {})
-        discordLink = userData.get('discord', {})
-        avatar = None
-        if discordLink.get('linked', False):
-            avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
+        userData = user.get_dict('data')
+        discordLink = userData.get_dict('discord')
+        backup_avatar = None
+        if discordLink.get_bool('linked'):
+            member = BadManiac.getDiscordMember(discordLink.get_str('id'))
+            backup_avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
+
 
         profiles = GameData.getUserGameSettings(userId)
 
@@ -53,13 +57,13 @@ class UserAccount(Resource):
         return {
             'status': 'success',
             'user': {
-                'id': user['id'],
-                'name': user['username'],
-                'email': user['email'] if authUser else None,
-                'admin': user['admin'],
-                'banned': user['banned'],
-                'avatar': avatar,
-                'data': user['data'] if authUser else None,
+                'id': user.get_int('id'),
+                'name': user.get_str('username'),
+                'email': user.get_str('email') if authUser else None,
+                'admin': user.get_bool('admin'),
+                'banned': user.get_bool('banned'),
+                'avatar': member.get_str('avatar') if member else backup_avatar,
+                'data': user.get_dict('data') if authUser else None,
                 'profiles': profiles,
                 'arcades': arcades
             }

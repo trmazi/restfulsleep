@@ -10,7 +10,7 @@ class MailjetSMTP:
     password = None
 
     @staticmethod
-    def update_config(config: dict) -> None:
+    def updateConfig(config: dict) -> None:
         MailjetSMTP.server = config.get('server')
         MailjetSMTP.address = config.get('address')
         MailjetSMTP.username = config.get('username')

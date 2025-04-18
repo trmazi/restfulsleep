@@ -6,7 +6,7 @@ class BackBlazeCDN:
     bucket = None
 
     @staticmethod
-    def update_config(bb_config: Dict[str, Any]) -> None:
+    def updateConfig(bb_config: Dict[str, Any]) -> None:
         apiID = bb_config.get('key-id', '')
         apiKey = bb_config.get('auth-key', '')
         BackBlazeCDN.bucket = bb_config.get('bucket-name', '')

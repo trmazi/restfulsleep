@@ -1,4 +1,3 @@
-import requests
 from flask_restful import Resource
 
 from api.constants import APIConstants
@@ -115,3 +114,39 @@ class Maintenance(Resource):
             return APIConstants.bad_end(str(e))
 
         return {'status': 'success'}
+    
+class Client(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        audit = AdminData.getAllClients()
+        return {'status': 'success', 'data': audit}
+    
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        name = data.get_str('name', None)
+        if not name: 
+            return APIConstants.bad_end('No name provided!')
+        
+        if not AdminData.putClient(name):
+            return APIConstants.bad_end('Failed to put client!')
+        
+        audit = AdminData.getAllClients()
+        return {'status': 'success', 'data': audit}

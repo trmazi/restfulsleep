@@ -1,7 +1,7 @@
 import requests
 from io import BytesIO
 from typing import Dict, Any
-from api.constants import APIConstants
+from api.constants import APIConstants, ValidatedDict
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
 from api.external.pfsense import PFSense
@@ -11,9 +11,9 @@ class BadManiac:
     BM_KEY = None
 
     @staticmethod
-    def update_config(bm_config: Dict[str, Any]) -> None:
-        BadManiac.BM_URL = bm_config.get('endpoint', '')
-        BadManiac.BM_KEY = bm_config.get('auth-key', '')
+    def updateConfig(bmConfig: Dict[str, Any]) -> None:
+        BadManiac.BM_URL = bmConfig.get('endpoint', '')
+        BadManiac.BM_KEY = bmConfig.get('auth-key', '')
 
     @staticmethod
     def send_link_complete(discord_id: str):
@@ -39,10 +39,10 @@ class BadManiac:
             return APIConstants.bad_end(str(e))
         
     @staticmethod
-    def getDiscordMember(discordId: str):
+    def getDiscordMember(discordId: str) -> ValidatedDict | None:
         try:
             response = requests.get(f"{BadManiac.BM_URL}/member/{discordId}", headers={"X-API-Key": BadManiac.BM_KEY})
-            return response.json()
+            return ValidatedDict(response.json())
         except:
             return None
         
@@ -67,8 +67,6 @@ class BadManiac:
                 "machineList": MachineData.getArcadeMachines(arcadeId)
             }
         }
-
-        print(BadManiac.BM_KEY)
 
         try:
             requests.post(f"{BadManiac.BM_URL}/onboardArcade", json=requestData, headers={"X-API-Key": BadManiac.BM_KEY})

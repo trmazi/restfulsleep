@@ -10,7 +10,7 @@ class Integrations:
     TACHI_CONFIG = {}
 
     @classmethod
-    def update_config(self, discord_config: dict, tachi_config: dict) -> None:
+    def updateConfig(self, discord_config: dict, tachi_config: dict) -> None:
         Integrations.DISCORD_CONFIG = discord_config
         Integrations.TACHI_CONFIG = tachi_config
 

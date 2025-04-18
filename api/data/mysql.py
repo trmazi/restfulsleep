@@ -11,7 +11,7 @@ class MySQLBase:
     SessionLocal = None
 
     @staticmethod
-    def update_connection(db_config: Dict[str, Any]) -> None:
+    def updateConfig(db_config: Dict[str, Any]) -> None:
         user = db_config.get('user', '')
         password = db_config.get('pass', '')
         host = db_config.get('host', 'localhost')

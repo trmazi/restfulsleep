@@ -19,7 +19,7 @@ class ShareServer:
     UPLOAD_TMP_PATH = None
 
     @staticmethod
-    def update_config(share_config: Dict[str, Any]) -> None:
+    def updateConfig(share_config: Dict[str, Any]) -> None:
         ShareServer.SERVER_ENDPOINT = share_config.get('upload-endpoint', '')
         ShareServer.PUBLIC_PATH = share_config.get('public-path', '')
         ShareServer.UPLOAD_TMP_PATH = share_config.get('upload-tmp-path', '')
