@@ -21,7 +21,7 @@ class Scheduler:
     def run_scheduled_work(self, config: dict):
         db_config = config.get('database', {})
         if db_config:
-            MySQLBase.update_connection(db_config)
+            MySQLBase.updateConfig(db_config)
 
         cacheConfig = config.get('cache', {})
         if cacheConfig:
