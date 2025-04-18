@@ -39,6 +39,7 @@ class UserAccount(Resource):
         userData = user.get_dict('data')
         discordLink = userData.get_dict('discord', {})
         backup_avatar = None
+        member = None
         if discordLink.get_bool('linked'):
             member = BadManiac.getDiscordMember(discordLink.get_str('id'))
             backup_avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
