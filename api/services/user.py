@@ -37,7 +37,7 @@ class UserAccount(Resource):
             return APIConstants.bad_end('This user is banned.')
 
         userData = user.get_dict('data')
-        discordLink = userData.get_dict('discord')
+        discordLink = userData.get_dict('discord', {})
         backup_avatar = None
         if discordLink.get_bool('linked'):
             member = BadManiac.getDiscordMember(discordLink.get_str('id'))
