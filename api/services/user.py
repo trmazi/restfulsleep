@@ -64,6 +64,7 @@ class UserAccount(Resource):
                 'admin': user.get_bool('admin'),
                 'banned': user.get_bool('banned'),
                 'avatar': member.get_str('avatar') if member else backup_avatar,
+                'discordRoles': member.get('roles') if member else None,
                 'data': user.get_dict('data') if authUser else None,
                 'profiles': profiles,
                 'arcades': arcades
@@ -573,7 +574,7 @@ class UserCustomize(Resource):
             return session
         session = ValidatedDict(session)
         
-        dataState, data = RequestPreCheck.checkData()
+        dataState, data = RequestPreCheck.checkData({'customize': dict})
         if not dataState:
             return data
         data = ValidatedDict(data)
@@ -600,7 +601,7 @@ class UserAppVersion(Resource):
             return session
         session = ValidatedDict(session)
         
-        dataState, data = RequestPreCheck.checkData()
+        dataState, data = RequestPreCheck.checkData({'version': str, 'disable': bool})
         if not dataState:
             return data
         data = ValidatedDict(data)

@@ -63,8 +63,8 @@ class RequestPreCheck():
 
         for key, key_type in keys.items():
             getter = type_getters.get(key_type)
-            if getter and getter(key) is None:
-                return False, APIConstants.bad_end(f"{key}: {key_type.__name__} not found!")
+            if getter and getter(key, None) is None:
+                return False, APIConstants.bad_end(f"`{key}` type {key_type.__name__} not found!")
 
         return True, data
     
@@ -90,7 +90,7 @@ class RequestPreCheck():
 
         for key, key_type in keys.items():
             getter = type_getters.get(key_type)
-            if getter and getter(key) is None:
-                return False, APIConstants.bad_end(f"{key}: {key_type.__name__} not found!")
+            if getter and getter(key, None) is None:
+                return False, APIConstants.bad_end(f"`{key}` type {key_type.__name__} not found!")
 
         return True, data

@@ -41,10 +41,10 @@ class BadManiac:
     @staticmethod
     def getDiscordMember(discordId: str) -> ValidatedDict | None:
         try:
-            response = requests.get(f"{BadManiac.BM_URL}/member/{discordId}", headers={"X-API-Key": BadManiac.BM_KEY})
+            response = requests.get(f"{BadManiac.BM_URL}/member/{discordId}", headers={"X-API-Key": BadManiac.BM_KEY}, timeout=2)
             return ValidatedDict(response.json())
         except:
-            return None
+            return ValidatedDict({})
         
     @staticmethod
     def sendArcadeOnboarding(discordId: str, arcadeId: int):
