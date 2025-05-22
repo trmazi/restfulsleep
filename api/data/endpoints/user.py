@@ -32,6 +32,14 @@ class UserData:
                     'data': JsonEncoded.deserialize(user.data)
                 })
             
+    def getUsername(userId: int) -> str:
+        with MySQLBase.SessionLocal() as session:
+            user = session.query(User.username).filter(User.id == userId).first()
+            if user is None:
+                return None
+            else:
+                return user.username
+            
     def getUserPlayVideos(userId: int) -> dict:
         with MySQLBase.SessionLocal() as session:
             play_videos = session.query(UserContent).filter(UserContent.userid == userId, UserContent.type == "play_video").all()

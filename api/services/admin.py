@@ -20,6 +20,19 @@ class AdminDashboard(Resource):
         statistics = AdminData.getStats()
         audit = AdminData.getRecentAuditEvents(40)
         return {'status': 'success', 'data': {'statistics': statistics, 'audit': audit}}
+    
+class AdminArcade(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        arcades = ArcadeData.getAllArcades()
+        return {'status': 'success', 'data': arcades}
 
 class OnboardArcade(Resource):
     '''

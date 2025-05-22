@@ -2,6 +2,7 @@ from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import Arcade, ArcadeOwner, ArcadeSettings
 from api.data.data import BaseData
+from api.data.endpoints.user import UserData
 
 class ArcadeData:   
     def getArcade(arcadeId: int):
@@ -17,6 +18,28 @@ class ArcadeData:
                     'pin': int(arcade.pin),
                     'data': JsonEncoded.deserialize(arcade.data)
                 }
+            
+    def getAllArcades():
+        with MySQLBase.SessionLocal() as session:
+            arcades = session.query(Arcade).filter().all()
+            if arcades is None:
+                return None
+            else:
+                formattedArcades = []
+                for arcade in arcades:
+                    owners = ArcadeData.getArcadeOwners(arcade.id)
+                    for index, owner in enumerate(owners):
+                        owners[index] = UserData.getUsername(owner)
+
+                    formattedArcade = {
+                        'id': int(arcade.id),
+                        'name': arcade.name,
+                        'description': arcade.description,
+                        'owners': owners,
+                        'data': JsonEncoded.deserialize(arcade.data)
+                    }
+                    formattedArcades.append(formattedArcade)
+                return formattedArcades
 
     def putArcade(arcadeId: int = None, newArcade: dict = None):
         if newArcade is None:
