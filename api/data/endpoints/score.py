@@ -130,6 +130,69 @@ class ScoreData:
         attempts.sort(key=lambda x: x['timestamp'], reverse=True)
         
         return attempts
+    
+    @staticmethod
+    def getAttempts(game: str, songId: int, userId: int = None) -> List[Dict]:
+        with MySQLBase.SessionLocal() as session:
+            query = (
+                session.query(Attempt)
+                .filter(Attempt.musicid == songId)
+                .order_by(Attempt.timestamp.desc())
+            )
+
+            if userId is not None:
+                query = query.filter(Attempt.userid == userId)
+
+            results = query.limit(100).all()
+        attempts = []
+        for attempt in results:
+            attemptUser = ProfileData.getProfile(game, None, attempt.userid, True)
+            if attemptUser == None:
+                continue
+
+            attempts.append({
+                'timestamp': attempt.timestamp,
+                'userId': attempt.userid,
+                'username': attemptUser.get('username', ''),
+                'musicId': attempt.musicid,
+                'machineId': attempt.lid,
+                'points': attempt.points,
+                'newRecord': bool(attempt.new_record),
+                'data': JsonEncoded.deserialize(attempt.data),
+            })
+
+        return attempts
+    
+    @staticmethod
+    def getRecords(game: str, songId: int, userId: int = None) -> List[Dict]:
+        with MySQLBase.SessionLocal() as session:
+            query = (
+                session.query(Score)
+                .filter(Score.musicid == songId)
+                .order_by(Score.points.desc())
+            )
+
+            if userId is not None:
+                query = query.filter(Score.userid == userId)
+
+            results = query.limit(100).all()
+        records = []
+        for record in results:
+            recordUser = ProfileData.getProfile(game, None, record.userid, True)
+            if recordUser == None:
+                continue
+
+            records.append({
+                'timestamp': record.timestamp,
+                'userId': record.userid,
+                'username': recordUser.get('username', ''),
+                'musicId': record.musicid,
+                'machineId': record.lid,
+                'points': record.points,
+                'data': JsonEncoded.deserialize(record.data),
+            })
+
+        return records
 
     @staticmethod
     def transferUserRecords(game: str, fromUserId: int, toUserId: int):

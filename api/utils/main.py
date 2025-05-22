@@ -25,7 +25,7 @@ from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize, UserAppVersion
 from api.services.profiles import allPlayers, Profile, Achievements
 from api.services.music import Music
-from api.services.score import Attempts, Records
+from api.services.score import Attempts, Records, TopScore
 
 # Share server
 from api.services.share import ShareServer, shareServerStatus, shareNewSession, shareBeginUpload, shareVideoUpload, shareEndUpload, shareLPACUpload
@@ -107,6 +107,7 @@ api.add_resource(Music, '/v1/music')
 # Scores
 api.add_resource(Attempts, '/v1/attempts/<game>')
 api.add_resource(Records, '/v1/records')
+api.add_resource(TopScore, '/v1/topscore/<game>/<songId>')
 
 # Game Upload API
 api.add_resource(shareServerStatus, '/share/server/status')

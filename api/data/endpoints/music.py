@@ -1,6 +1,3 @@
-import os
-import pickle
-import time
 from api.data.mysql import MySQLBase
 from api.data.types import Music
 from api.data.json import JsonEncoded
@@ -47,3 +44,45 @@ class MusicData:
                 LocalCache().putCachedData(cacheName, musicData)
 
         return musicData
+    
+    @staticmethod
+    def getSongByGameId(game: str, songId: int, version: int = None, chart: int = None) -> list[dict]:
+        with MySQLBase.SessionLocal() as session:
+            musicQuery = (
+                session.query(Music)
+                .filter(Music.game == game, Music.songid == songId, Music.chart == chart if chart else True)
+                .order_by(Music.songid.desc())
+            )
+
+            if version is not None:
+                musicQuery = musicQuery.filter(Music.version == version)
+
+            result = musicQuery.all()
+
+        seen = set()
+        groupedSongs = {}
+
+        for song in result:
+            key = (song.id, song.chart)
+            if key in seen:
+                continue
+            seen.add(key)
+
+            songData = {
+                'db_id': song.id,
+                'chart': song.chart,
+                'data': JsonEncoded.deserialize(song.data)
+            }
+
+            if song.songid not in groupedSongs:
+                groupedSongs[song.songid] = {
+                    'id': song.songid,
+                    'name': song.name,
+                    'artist': song.artist,
+                    'genre': song.genre,
+                    'charts': []
+                }
+
+            groupedSongs[song.songid]['charts'].append(songData)
+
+        return list(groupedSongs.values())[0] if len(groupedSongs) == 1 else list(groupedSongs.values())

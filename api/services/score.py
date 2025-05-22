@@ -2,6 +2,7 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
+from api.data.endpoints.music import MusicData
 from api.data.endpoints.score import ScoreData
 
 class Records(Resource):
@@ -33,4 +34,19 @@ class Attempts(Resource):
         return {
             'status': 'success',
             'data': data
+        }, 200
+    
+class TopScore(Resource):
+    def get(self, game: str, songId: int):
+        songData = MusicData.getSongByGameId(game, songId)
+        if not songData:
+            return APIConstants.bad_end('Failed to find song!')
+        
+        for index, chart in enumerate(songData.get('charts')):
+            chartRecords = ScoreData.getRecords(game, chart.get('db_id', None))
+            songData['charts'][index]['records'] = chartRecords
+
+        return {
+            'status': 'success',
+            'data': songData
         }, 200
