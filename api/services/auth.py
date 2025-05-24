@@ -46,9 +46,7 @@ class UserSession(Resource):
         '''
         Given a user's session id, delete it from the db.
         '''
-        dataState, data = RequestPreCheck.checkData({
-            'sessionId': str,
-        })
+        dataState, data = RequestPreCheck.checkData()
         if not dataState:
             return data
         
