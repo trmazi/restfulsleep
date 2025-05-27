@@ -55,6 +55,8 @@ class UserAccount(Resource):
                     'name': ArcadeData.getArcadeName(arcade)
                 })
 
+        scoreStats = ScoreData.getUserStats(userId)
+
         return {
             'status': 'success',
             'user': {
@@ -67,7 +69,8 @@ class UserAccount(Resource):
                 'discordRoles': member.get('roles') if member else None,
                 'data': user.get_dict('data') if authUser else None,
                 'profiles': profiles,
-                'arcades': arcades
+                'arcades': arcades,
+                'scoreStats': scoreStats
             }
         }
     

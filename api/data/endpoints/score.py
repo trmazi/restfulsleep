@@ -235,3 +235,47 @@ class ScoreData:
             session.commit()
 
         return len(scores_to_transfer)
+    
+    @staticmethod
+    def getUserStats(userId: int):
+        with MySQLBase.SessionLocal() as session:
+            attempt_results = (
+                session.query(
+                    Attempt.timestamp,
+                    Attempt.musicid,
+                    Attempt.lid,
+                    Attempt.points,
+                    Attempt.new_record
+                )
+                .filter(Attempt.userid == userId)
+                .all()
+            )
+
+            record_results = (
+                session.query(
+                    Score.timestamp,
+                    Score.musicid,
+                    Score.lid,
+                    Score.points
+                )
+                .filter(Score.userid == userId)
+                .all()
+            )
+
+        attempts = [{
+            'timestamp': a.timestamp,
+            'musicId': a.musicid,
+            'machineId': a.lid,
+            'points': a.points,
+            'newRecord': bool(a.new_record),
+        } for a in attempt_results]
+
+        records = [{
+            'timestamp': r.timestamp,
+            'musicId': r.musicid,
+            'machineId': r.lid,
+            'points': r.points,
+        } for r in record_results]
+
+        return {'attempts': attempts, 'records': records}
+    
