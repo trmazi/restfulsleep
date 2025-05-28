@@ -10,5 +10,5 @@ requests
 passlib
 pycryptodome
 discord-webhook
-b2sdk
+b2sdk == 2.8.1
 pillow
