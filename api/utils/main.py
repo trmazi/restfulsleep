@@ -106,7 +106,7 @@ api.add_resource(Music, '/v1/music')
 
 # Scores
 api.add_resource(Attempts, '/v1/attempts/<game>')
-api.add_resource(Records, '/v1/records')
+api.add_resource(Records, '/v1/records/<game>')
 api.add_resource(TopScore, '/v1/topscore/<game>/<songId>')
 
 # Game Upload API

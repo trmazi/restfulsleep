@@ -1,12 +1,13 @@
 import argparse
 import yaml
 import concurrent.futures
-from api.constants import GameConstants
+from api.constants import GameConstants, VersionConstants
 from api.data.mysql import MySQLBase
 from api.data.cache import LocalCache
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
 from api.data.endpoints.music import MusicData
+from api.data.endpoints.score import ScoreData
 
 class Scheduler:
     @staticmethod
@@ -49,6 +50,49 @@ class Scheduler:
             GameConstants.TSUMTSUM,
         ]
 
+        cacheList = [
+            {
+                'game': GameConstants.DDR,
+                'versions': [VersionConstants.DDR_ACE, VersionConstants.DDR_A20, VersionConstants.DDR_A20_PLUS, VersionConstants.DDR_A3]
+            },
+            {
+                'game': GameConstants.DDROMNI,
+                'versions': [VersionConstants.DDR_OMNI_MIX]
+            },
+            {
+                'game': GameConstants.DRUMMANIA,
+                'versions': [VersionConstants.DRUMMANIA_V8, VersionConstants.DRUMMANIA_V7]
+            },
+            {
+                'game': GameConstants.GITADORA_DM,
+                'versions': [VersionConstants.GITADORA_HIGH_VOLTAGE, VersionConstants.GITADORA_FUZZUP]
+            },
+            {
+                'game': GameConstants.GITADORA_GF,
+                'versions': [VersionConstants.GITADORA_HIGH_VOLTAGE, VersionConstants.GITADORA_FUZZUP]
+            },
+            {
+                'game': GameConstants.GUITARFREAKS,
+                'versions': [VersionConstants.GUITARFREAKS_V8, VersionConstants.GUITARFREAKS_V7]
+            },
+            {
+                'game': GameConstants.IIDX,
+                'versions': [VersionConstants.IIDX_CASTHOUR, VersionConstants.IIDX_RESIDENT, VersionConstants.IIDX_EPOLIS]
+            },
+            {
+                'game': GameConstants.JUBEAT,
+                'versions': [VersionConstants.JUBEAT_CLAN, VersionConstants.JUBEAT_FESTO, VersionConstants.JUBEAT_AVE]
+            },
+            {
+                'game': GameConstants.POPN_MUSIC,
+                'versions': [VersionConstants.POPN_MUSIC_KAIMEI_RIDDLES, VersionConstants.POPN_MUSIC_UNILAB]
+            },
+            {
+                'game': GameConstants.SDVX,
+                'versions': [VersionConstants.SDVX_VIVID_WAVE, VersionConstants.SDVX_EXCEED_GEAR]
+            },
+        ]
+
         for game in gameList:
             cacheName = f'juiced_profiles_{game}'
             print(f'[RestfulCache] Checking {cacheName}')
@@ -71,7 +115,14 @@ class Scheduler:
 
             # Make a cache of music data for this game
             musicData = MusicData.getAllMusic(game)
+            MusicData.getAllSongs(game)
             print(f'[RestfulCache] Cached {len(musicData)} musicIds for {game}')
+
+        for cacheEntry in cacheList:
+            for version in cacheEntry.get('versions'):
+                print(f'[RestfulCache] Caching {cacheEntry.get("game")} records for {version}')
+                cacheData = ScoreData.getAllRecords(cacheEntry.get('game'), version)
+                print(f'[RestfulCache] Cached {len(cacheData)} entries for {cacheEntry.get("game")}, {version}')
 
 parser = argparse.ArgumentParser(description="A scheduler for work that needs to be done periodically.")
 parser.add_argument("-c", "--config", help="Core configuration. Defaults to config.yaml", type=str, default="config.yaml")

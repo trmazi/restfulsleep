@@ -6,8 +6,18 @@ from api.data.endpoints.music import MusicData
 from api.data.endpoints.score import ScoreData
 
 class Records(Resource):
-    def get(self):
-        data = ScoreData.getAllRecords(game = 'ddr', version = 11)
+    def get(self, game: str):
+        version = request.args.get('version')
+        if version:
+            try:
+                version = int(version)
+            except:
+                version = None
+
+        if not version:
+            return APIConstants.bad_end('No version provided!')
+
+        data = ScoreData.getAllRecords(game, version)
         return {
             'status': 'success',
             'songs': data

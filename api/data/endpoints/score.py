@@ -1,80 +1,79 @@
+from sqlalchemy import func, and_
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 from api.data.mysql import MySQLBase
 from api.data.types import Music, Attempt, Score
 from api.data.json import JsonEncoded
+from api.data.cache import LocalCache
 
 from api.data.endpoints.music import MusicData
 from api.data.endpoints.profiles import ProfileData
 
 class ScoreData:
     @staticmethod
-    def getAllRecords(game: str = None, version: int = None, userId: int = None, machineId: int = None, limit: int = 1) -> dict:
-        with MySQLBase.SessionLocal() as session:
-            # Get the list of songs matching the game and version
-            musicQuery = (
-                session.query(Music)
-                .filter(Music.game == game)
-                .order_by(Music.songid.desc())
-            )
-            musicData = musicQuery.all()
+    def getAllRecords(game: str = None, version: int = None, userId: int = None, machineId: int = None) -> dict:
+        musicData = MusicData.getAllSongs(game, version)
+        allDBId = [chart['db_id'] for song in musicData for chart in song.get('charts', [])]
+        if not allDBId:
+            return None
 
-            scores = []
-            music_ids = [song.id for song in musicData]
+        cacheName = f'web_records_{game}_{version}'
+        cacheData = None
 
-            # If there are no songs matching, return an empty list
-            if not music_ids:
-                return scores
+        if not userId and not machineId:
+            cacheData = LocalCache().getCachedData(cacheName)
 
-            # Get attempts for the retrieved songs in one query
-            attemptQuery = session.query(Score).filter(Score.musicid.in_(music_ids))
-
-            if userId is not None:
-                attemptQuery = attemptQuery.filter(Score.userid == userId)
-
-            if machineId is not None:
-                attemptQuery = attemptQuery.filter(Score.lid == machineId)
-
-            attemptQuery = attemptQuery.order_by(Score.musicid, Score.timestamp.desc()).all()
-
-            # Group attempts by music id and limit the number of attempts per song
-            attempts_by_music_id = {}
-            for attempt in attemptQuery:
-                if attempt.musicid not in attempts_by_music_id:
-                    attempts_by_music_id[attempt.musicid] = []
-                if len(attempts_by_music_id[attempt.musicid]) < limit:
-                    attempts_by_music_id[attempt.musicid].append(attempt)
-
-            # Transform the results into the desired format
-            songs = []
-            for song in musicData:
-                songData = {
-                    'title': song.name,
-                    'artist': song.artist,
-                    'genre': song.genre,
-                    'chart': song.chart,
-                    'data': JsonEncoded.deserialize(song.data),
-                    'scores': []
-                }
-                song_attempts = attempts_by_music_id.get(song.id, [])
-                for result in song_attempts:
-                    data = JsonEncoded.deserialize(result.data)
-                    songData['scores'].append(
-                        {
-                            'timestamp': result.timestamp,
-                            'userId': result.userid,
-                            'musicId': result.musicid,
-                            'machineId': result.lid,
-                            'points': result.points,
-                            'combos': data.get('combo'),
-                            'halo': data.get('halo'),
-                        }
+        if not cacheData:
+            with MySQLBase.SessionLocal() as session:
+                subquery = (
+                    session.query(
+                        Score.musicid,
+                        func.max(Score.points).label("max_points")
                     )
+                    .filter(Score.musicid.in_(allDBId))
+                )
 
-                songs.append(songData)
+                if userId is not None:
+                    subquery = subquery.filter(Score.userid == userId)
+                if machineId is not None:
+                    subquery = subquery.filter(Score.lid == machineId)
+                subquery = subquery.group_by(Score.musicid).subquery()
 
-            return songs
-        
+                bestScores = (
+                    session.query(Score)
+                    .join(subquery, and_(
+                        Score.musicid == subquery.c.musicid,
+                        Score.points == subquery.c.max_points
+                    ))
+                    .order_by(Score.musicid, Score.timestamp.asc())  # earliest timestamp if tie
+                    .all()
+                )
+                bestScoresByDBId = {score.musicid: score for score in bestScores}
+
+            for song in musicData:
+                for chart in song.get('charts', []):
+                    record = bestScoresByDBId.get(chart['db_id'])
+                    if not record:
+                        continue
+
+                    recordUser = ProfileData.getProfile(game, version, record.userid, True)
+                    if recordUser == None:
+                        continue
+                    chart['record'] = {
+                        'timestamp': record.timestamp,
+                        'userId': record.userid,
+                        'username': recordUser.get('username', ''),
+                        'musicId': record.musicid,
+                        'machineId': record.lid,
+                        'points': record.points,
+                        'data': JsonEncoded.deserialize(record.data),
+                    }
+
+            if not userId and not machineId:
+                LocalCache().putCachedData(cacheName, musicData)
+
+        return cacheData if cacheData else musicData
+
     @staticmethod
     def getAllAttempts(game: str, version: int = None, userId: int = None, machineId: int = None) -> List[Dict]:
         allMusic = MusicData.getAllMusic(game, version)
