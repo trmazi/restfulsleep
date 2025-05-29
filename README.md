@@ -8,6 +8,9 @@ Currently used by the following PhaseII tools:
 - PhaseWeb3: Vue based PhaseII Web UI
 - BadManiac: Discord bot for scorecards and playvideos
 
+## WARNING!
+This documentation is insanely out of date and needs work! Please read api/utils/main.py for endpoints.
+
 ## Auth flow
 Currently, application keys are not used. I plan on using them but for now it's not too important.
 
