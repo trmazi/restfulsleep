@@ -11,13 +11,13 @@ from api.data.endpoints.profiles import ProfileData
 
 class ScoreData:
     @staticmethod
-    def getAllRecords(game: str = None, version: int = None, userId: int = None, machineId: int = None) -> dict:
-        musicData = MusicData.getAllSongs(game, version)
+    def getAllRecords(game: str = None, userId: int = None, machineId: int = None) -> dict:
+        musicData = MusicData.getAllSongs(game)
         allDBId = [chart['db_id'] for song in musicData for chart in song.get('charts', [])]
         if not allDBId:
             return None
 
-        cacheName = f'web_records_{game}_{version}'
+        cacheName = f'web_records_{game}'
         cacheData = None
 
         if not userId and not machineId:
@@ -56,7 +56,7 @@ class ScoreData:
                     if not record:
                         continue
 
-                    recordUser = ProfileData.getProfile(game, version, record.userid, True)
+                    recordUser = ProfileData.getProfile(game, None, record.userid, True)
                     if recordUser == None:
                         continue
                     chart['record'] = {

@@ -2,29 +2,28 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
+from api.precheck import RequestPreCheck
 from api.data.endpoints.music import MusicData
 from api.data.endpoints.score import ScoreData
 
 class Records(Resource):
     def get(self, game: str):
-        version = request.args.get('version')
-        if version:
-            try:
-                version = int(version)
-            except:
-                version = None
-
-        if not version:
-            return APIConstants.bad_end('No version provided!')
-
-        data = ScoreData.getAllRecords(game, version)
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        data = ScoreData.getAllRecords(game)
         return {
             'status': 'success',
-            'songs': data
+            'data': data
         }, 200
     
 class Attempts(Resource):
     def get(self, game):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         version = request.args.get('version')
         userId = request.args.get('userId')
 
@@ -48,6 +47,10 @@ class Attempts(Resource):
     
 class TopScore(Resource):
     def get(self, game: str, songId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         songData = MusicData.getSongByGameId(game, songId)
         if not songData:
             return APIConstants.bad_end('Failed to find song!')
