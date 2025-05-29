@@ -57,7 +57,7 @@ class MusicData:
                 musicQuery = (
                     session.query(Music)
                     .filter(Music.game == game, Music.songid.in_(song_ids) if song_ids else True)
-                    .order_by(Music.songid.desc())
+                    .order_by(Music.songid.desc(), Music.version.asc())
                 )
 
                 if version is not None:
@@ -81,11 +81,13 @@ class MusicData:
                 }
 
                 if song.songid not in groupedSongs:
+                    category = chartData.get('data', {}).get('category', None)
                     groupedSongs[song.songid] = {
                         'id': song.songid,
                         'name': song.name,
                         'artist': song.artist,
                         'genre': song.genre,
+                        'version': category if category else song.version,
                         'charts': []
                     }
 
