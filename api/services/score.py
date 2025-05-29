@@ -2,7 +2,7 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
-from api.precheck import RequestPreCheck
+from api.precheck import RequestPreCheck, UserData
 from api.data.endpoints.music import MusicData
 from api.data.endpoints.score import ScoreData
 
@@ -12,7 +12,12 @@ class Records(Resource):
         if not sessionState:
             return session
         
-        data = ScoreData.getAllRecords(game)
+        userId = None
+        argsState, args = RequestPreCheck.checkArgs({'userId': str})
+        if argsState:
+            userId = int(args.get_str('userId'))
+        
+        data = ScoreData.getAllRecords(game, userId)
         return {
             'status': 'success',
             'data': data
