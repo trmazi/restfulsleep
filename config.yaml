@@ -5,7 +5,7 @@ database:
 
 cache:
   cache_path: /var/restfulcache
-  expiration: 300000
+  expiration: 300
 
 crypto:
   cookie_key:

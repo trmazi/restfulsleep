@@ -6,7 +6,7 @@ from api.constants import ValidatedDict
 
 class LocalCache:
     CACHE_PATH = None
-    CACHE_EXPIRATION = 300000 # 5 minutes
+    CACHE_EXPIRATION = 300 # 5 minutes
 
     @staticmethod
     def updateConfig(cacheConfig: dict) -> None:
