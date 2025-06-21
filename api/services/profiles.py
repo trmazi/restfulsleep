@@ -4,6 +4,7 @@ import concurrent.futures
 
 from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
+from api.data.endpoints.user import UserData
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.achievements import AchievementData
 from api.data.endpoints.game import GameData
@@ -82,6 +83,7 @@ class Profile(Resource):
         }, 200
     
     def post(self, game: str):
+        session: ValidatedDict
         sessionState, session = RequestPreCheck.getSession()
         if not sessionState:
             return session
@@ -91,9 +93,15 @@ class Profile(Resource):
 
         if not userId:
             return APIConstants.bad_end('No userId!')
+
+        sessionUserId = session.get_int('id', -1)
+        sessionUser: ValidatedDict = UserData.getUser(sessionUserId)
+        if not sessionUser:
+            return APIConstants.bad_end('No user found.')
         
-        if session['id'] != int(userId):
-            return APIConstants.bad_end('This isn\'t your profile!')
+        if sessionUserId != int(userId):
+            if not sessionUser.get_bool('admin'):
+                return APIConstants.bad_end('This isn\'t your profile!')
         
         data = request.json
         if not data:
