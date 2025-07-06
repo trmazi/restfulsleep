@@ -18,7 +18,11 @@ class MySQLBase:
         database = db_config.get('db', '')
 
         connection_string = f'mysql+mysqlconnector://{user}:{password}@{host}/{database}'
-        MySQLBase.engine = create_engine(connection_string)
+        MySQLBase.engine = create_engine(
+            connection_string,
+            pool_pre_ping=True,
+            pool_recycle=1800
+        )
         MySQLBase.SessionLocal = sessionmaker(bind=MySQLBase.engine)
 
 if MySQLBase.engine:

@@ -16,28 +16,41 @@ class UserAccount(Resource):
         Loads a user's account based on ID or a User Auth Key.
         If given a user ID, only return a user's public info. Otherwise, return everything.
         '''
-        userId = request.args.get('userId')
-        if not userId:
-            return APIConstants.bad_end('No userId provided')
-
-        user: ValidatedDict = UserData.getUser(int(userId))
-        if not user:
-            return APIConstants.bad_end('No user found.')
-
-        authUser = False;
-        session: ValidatedDict
         sessionState, session = RequestPreCheck.getSession()
-        if sessionState:
-            if user.get_int('id') == session.get_int('id', -1):
-                if user.get_bool('banned'):
-                    return APIConstants.bad_end('You have been banned.')
-                authUser = True
+        if not sessionState:
+            return session
+        sessionUserId = session.get_int('id')
+        sessionUser = UserData.getUser(sessionUserId)
 
-        if user.get_bool('banned'):
-            return APIConstants.bad_end('This user is banned.')
+        argsState, args = RequestPreCheck.checkArgs()
+        if not argsState:
+            return args
+        reqUserId = args.get_str('userId', None)
+        if not reqUserId:
+            reqUserId = sessionUserId
+        else:
+            try:
+                reqUserId = int(reqUserId)
+            except:
+                return APIConstants.bad_end('Failed to load a userId.')
+            
+        reqUser = UserData.getUser(reqUserId)
+        if not reqUser:
+            return APIConstants.bad_end('No user found.')
+        
+        authUser = True if sessionUserId == reqUserId else False
+        if sessionUser.get_bool('admin'):
+            authUser = True
 
-        userData = user.get_dict('data')
-        discordLink = userData.get_dict('discord', {})
+        if reqUser.get_bool('banned') and not sessionUser.get_bool('admin'):
+            return APIConstants.bad_end('You\'re banned.' if authUser else 'This user is banned.')
+        
+        if not authUser:
+            if not reqUser.get_bool('public'):
+                return APIConstants.bad_end('This is a private profile.')
+
+        reqUserData = reqUser.get_dict('data')
+        discordLink = reqUserData.get_dict('discord')
         backup_avatar = None
         member = None
         if discordLink.get_bool('linked'):
@@ -45,29 +58,29 @@ class UserAccount(Resource):
             backup_avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
 
 
-        profiles = GameData.getUserGameSettings(userId)
-
+        profiles = GameData.getUserGameSettings(reqUserId)
         arcades = []
         if authUser:
-            for arcade in ArcadeData.getUserArcades(userId):
+            for arcade in ArcadeData.getUserArcades(reqUserId):
                 arcades.append({
                     'id': arcade,
                     'name': ArcadeData.getArcadeName(arcade)
                 })
 
-        scoreStats = ScoreData.getUserStats(userId)
+        scoreStats = ScoreData.getUserStats(reqUserId)
 
         return {
             'status': 'success',
-            'user': {
-                'id': user.get_int('id'),
-                'name': user.get_str('username'),
-                'email': user.get_str('email') if authUser else None,
-                'admin': user.get_bool('admin'),
-                'banned': user.get_bool('banned'),
+            'data': {
+                'id': reqUser.get_int('id'),
+                'name': reqUser.get_str('username'),
+                'email': reqUser.get_str('email') if authUser else None,
+                'admin': reqUser.get_bool('admin'),
+                'banned': reqUser.get_bool('banned'),
+                'public': reqUser.get_bool('public'),
                 'avatar': member.get_str('avatar') if member else backup_avatar,
                 'discordRoles': member.get('roles') if member else None,
-                'data': user.get_dict('data') if authUser else None,
+                'data': reqUser.get_dict('data') if authUser else None,
                 'profiles': profiles,
                 'arcades': arcades,
                 'scoreStats': scoreStats
@@ -90,6 +103,7 @@ class UserAccount(Resource):
         username = None
         email = None
         pin = None
+        public = None
 
         if data.get('username', None):
             try:
@@ -125,8 +139,14 @@ class UserAccount(Resource):
             
             if len(pin) == 0:
                 pin = None # If it's an empty string, we'll just forget it.
+
+        if data.get('public', None) != None:
+            try:
+                public = bool(data.get('public', False))
+            except:
+                return APIConstants.bad_end('Invalid public!')
             
-        if UserData.updateUser(userId, username, email, pin):
+        if UserData.updateUser(userId, username, email, pin, public):
             return {'status': 'success'}
 
         return APIConstants.bad_end('Failed to save!')

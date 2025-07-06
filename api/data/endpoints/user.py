@@ -29,6 +29,7 @@ class UserData:
                     'email': user.email,
                     'admin': bool(user.admin),
                     'banned': bool(user.banned),
+                    'public': bool(user.public),
                     'data': JsonEncoded.deserialize(user.data)
                 })
             
@@ -152,7 +153,7 @@ class UserData:
             else:
                 return True
             
-    def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None) -> bool:
+    def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None, public: bool = None) -> bool:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
             if user is None:
@@ -169,6 +170,10 @@ class UserData:
 
                 if newPin:
                     user.pin = newPin
+                    didAnything = True
+
+                if public != None:
+                    user.public = int(public)
                     didAnything = True
 
                 if didAnything:

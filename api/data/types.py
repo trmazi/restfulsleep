@@ -196,6 +196,7 @@ class User(Base):
     pin = Column(String(4), primary_key=False)
     admin = Column(Boolean)
     banned = Column(Boolean)
+    public = Column(Boolean)
     data = Column(LargeBinary)
 
 class UserContent(Base):
