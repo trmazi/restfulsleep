@@ -18,8 +18,8 @@ from api.external.badmaniac import BadManiac
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.admin import AdminDashboard, AdminArcade, OnboardArcade, Maintenance, Client
-from api.services.arcade import Arcades, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
+from api.services.admin import AdminDashboard, AdminArcade, AdminArcadeMachine, AdminArcades, OnboardArcade, Maintenance, Client, AdminUsers, News
+from api.services.arcade import Arcade, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize, UserAppVersion
@@ -54,13 +54,17 @@ api.add_resource(restfulTop, '/')
 
 # Admin
 api.add_resource(AdminDashboard, '/v1/admin')
-api.add_resource(AdminArcade, '/v1/admin/arcades')
+api.add_resource(AdminArcade, '/v1/admin/arcade/<arcadeId>')
+api.add_resource(AdminArcadeMachine, '/v1/admin/arcade/<arcadeId>/machine')
+api.add_resource(AdminArcades, '/v1/admin/arcades')
 api.add_resource(OnboardArcade, '/v1/admin/onboardArcade')
 api.add_resource(Maintenance, '/v1/admin/maint')
 api.add_resource(Client, '/v1/admin/client')
+api.add_resource(AdminUsers, '/v1/admin/users')
+api.add_resource(News, '/v1/admin/news')
 
 # Arcades
-api.add_resource(Arcades, '/v1/arcade/<arcadeId>')
+api.add_resource(Arcade, '/v1/arcade/<arcadeId>')
 api.add_resource(ArcadeSettings, '/v1/arcade/<arcadeId>/settings')
 api.add_resource(Paseli, '/v1/arcade/<arcadeId>/paseli')
 api.add_resource(VPN, '/v1/arcade/<arcadeId>/exportVPN')

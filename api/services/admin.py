@@ -21,7 +21,7 @@ class AdminDashboard(Resource):
         audit = AdminData.getRecentAuditEvents(40)
         return {'status': 'success', 'data': {'statistics': statistics, 'audit': audit}}
     
-class AdminArcade(Resource):
+class AdminArcades(Resource):
     def get(self):
         sessionState, session = RequestPreCheck.getSession()
         if not sessionState:
@@ -33,6 +33,72 @@ class AdminArcade(Resource):
         
         arcades = ArcadeData.getAllArcades()
         return {'status': 'success', 'data': arcades}
+    
+class AdminArcade(Resource):
+    def post(self, arcadeId: int):
+        '''
+        Update an arcade's name and description
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedArcade = {
+            'name': str(data['name']),
+            'description': str(data['description']),
+            'beta': bool(data['beta']),
+        }
+        
+        error_code = ArcadeData.updateArcadeNameDesc(arcadeId, formattedArcade.get('name', ''), formattedArcade.get('description', ''), formattedArcade.get('beta', False))
+        if error_code:
+            return APIConstants.bad_end(error_code)
+        
+        return {
+            'status': 'success'
+        }, 200
+    
+class AdminArcadeMachine(Resource):
+    def post(self, arcadeId: int):
+        '''
+        Create a new machine for an existing arcade
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedMachine = {
+            'name': data['name'],
+            'PCBID': data['PCBID'],
+            'port': None,
+            'ota': data['ota'],
+            'data': {
+                'cabinet': data['cabinet']
+            }
+        }
+        
+        machine = MachineData.putMachine(None, arcadeId, formattedMachine)
+        if not machine:
+            return APIConstants.bad_end('Failed to add machine')
+        
+        return {
+            'status': 'success'
+        }, 200
 
 class OnboardArcade(Resource):
     '''
@@ -163,3 +229,63 @@ class Client(Resource):
         
         audit = AdminData.getAllClients()
         return {'status': 'success', 'data': audit}
+
+class AdminUsers(Resource):
+    '''
+    Handle loading user data for admin management
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        users = AdminData.getAllUsers()
+        return {'status': 'success', 'data': users}
+    
+class News(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        news = AdminData.getAllNews()
+        return {'status': 'success', 'data': news}
+    
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        title = data.get_str('title', None)
+        if not title: 
+            return APIConstants.bad_end('No title provided!')
+        
+        body = data.get_str('body', None)
+        if not body: 
+            return APIConstants.bad_end('No body provided!')
+        
+        data = data.get_dict('data', None)
+        if not data: 
+            return APIConstants.bad_end('No data provided!')
+        
+        if not AdminData.putNews(title, body, data):
+            return APIConstants.bad_end('Failed to put news!')
+        
+        news = AdminData.getAllNews()
+        return {'status': 'success', 'data': news}

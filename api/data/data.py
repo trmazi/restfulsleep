@@ -2,14 +2,17 @@ class BaseData():
     @classmethod
     def update_data(cls, existing_data, new_data):
         for key, value in new_data.items():
+            if key in ["usergamedata", "beta", "userId", "stats", "is_beta", "admin", "beta"]:
+                continue
+
             if value is None:
                 # If the value is None, remove the key from existing_data
                 if key in existing_data:
                     del existing_data[key]
             elif isinstance(value, dict):
-                if key in ["usergamedata", "beta", "userId", "stats"]:
+                if key in ["usergamedata", "beta", "userId", "stats", "is_beta", "admin", "beta"]:
                     continue
-
+                
                 if key not in existing_data:
                     existing_data[key] = {}
                 

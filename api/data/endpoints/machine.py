@@ -1,3 +1,4 @@
+from api.constants import ValidatedDict
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import Machine
@@ -5,13 +6,13 @@ from api.data.types import Machine
 from sqlalchemy import text
 
 class MachineData:   
-    def getArcadeMachines(arcadeId: int):
+    def getArcadeMachines(arcadeId: int) -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             machines = session.query(Machine).filter(Machine.arcadeid == arcadeId).all()
             if machines is None:
                 return None
             else:
-                return [{
+                return [ValidatedDict({
                     'id': int(machine.id),
                     'pcbId': machine.pcbid,
                     'PCBID': machine.pcbid,
@@ -24,9 +25,9 @@ class MachineData:
                     'ota': bool(machine.updaton),
                     'cabinet': False,
                     'data': JsonEncoded.deserialize(machine.data)
-                } for machine in machines]
+                }) for machine in machines]
             
-    def putMachine(machineId: int = None, arcadeId: int = None, newMachine: dict = None):
+    def putMachine(machineId: int = None, arcadeId: int = None, newMachine: dict = None) -> ValidatedDict | None:
         if newMachine is None:
             return None  # No data provided, return None
         
@@ -80,7 +81,7 @@ class MachineData:
 
             session.commit()
 
-            return {
+            return ValidatedDict({
                 'id': int(machine.id),
                 'name': machine.description,
                 'description': machine.name,
@@ -89,15 +90,15 @@ class MachineData:
                 'port': port,
                 'ota': machine.updaton,
                 'data': JsonEncoded.deserialize(machine.data)
-            }
+            })
             
-    def fromPCBID(pcbid: str):
+    def fromPCBID(pcbid: str) -> ValidatedDict | None:
         with MySQLBase.SessionLocal() as session:
             machine = session.query(Machine).filter(Machine.pcbid == pcbid).first()
             if machine is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': int(machine.id),
                     'PCBID': machine.pcbid,
                     'name': machine.description,
@@ -108,4 +109,4 @@ class MachineData:
                     'ota': bool(machine.updaton),
                     'cabinet': False,
                     'data': JsonEncoded.deserialize(machine.data)
-                }
+                })

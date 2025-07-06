@@ -1,3 +1,4 @@
+from api.constants import ValidatedDict
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import Arcade, ArcadeOwner, ArcadeSettings
@@ -5,21 +6,21 @@ from api.data.data import BaseData
 from api.data.endpoints.user import UserData
 
 class ArcadeData:   
-    def getArcade(arcadeId: int):
+    def getArcade(arcadeId: int) -> ValidatedDict | None:
         with MySQLBase.SessionLocal() as session:
             arcade = session.query(Arcade).filter(Arcade.id == arcadeId).first()
             if arcade is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': int(arcade.id),
                     'name': arcade.name,
                     'description': arcade.description,
                     'pin': int(arcade.pin),
                     'data': JsonEncoded.deserialize(arcade.data)
-                }
+                })
             
-    def getAllArcades():
+    def getAllArcades() -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             arcades = session.query(Arcade).filter().all()
             if arcades is None:
@@ -38,10 +39,10 @@ class ArcadeData:
                         'owners': owners,
                         'data': JsonEncoded.deserialize(arcade.data)
                     }
-                    formattedArcades.append(formattedArcade)
+                    formattedArcades.append(ValidatedDict(formattedArcade))
                 return formattedArcades
 
-    def putArcade(arcadeId: int = None, newArcade: dict = None):
+    def putArcade(arcadeId: int = None, newArcade: dict = None) -> ValidatedDict | None:
         if newArcade is None:
             return None  # No data provided, return None
         
@@ -74,13 +75,31 @@ class ArcadeData:
 
             session.commit()
 
-            return {
+            return ValidatedDict({
                 'id': int(arcade.id),
                 'name': arcade.name,
                 'description': arcade.description,
                 'pin': int(arcade.pin),
                 'data': JsonEncoded.deserialize(arcade.data)
-            }
+            })
+        
+    def updateArcadeNameDesc(arcadeId: int, new_name: str, new_desc: str, beta: bool) -> str | None:
+        arcade = ArcadeData.getArcade(arcadeId)
+        if not arcade:
+            return 'No arcade found!'
+
+        with MySQLBase.SessionLocal() as session:
+            arcade = session.query(Arcade).filter(Arcade.id == arcadeId).first()
+            if arcade:            
+                arcade.name = str(new_name)
+                arcade.description = str(new_desc)
+
+                data = JsonEncoded.deserialize(arcade.data)
+                data['is_beta'] = beta
+                arcade.data = JsonEncoded.serialize(data)
+                session.commit()
+                
+            return None
         
     def updateArcadeData(arcadeId: int, new_arcade: dict) -> str | None:
         arcade = ArcadeData.getArcade(arcadeId)
@@ -100,13 +119,13 @@ class ArcadeData:
                 
             return None
         
-    def getArcadeSettings(arcadeId: int, game: str, version: int, type: str):
+    def getArcadeSettings(arcadeId: int, game: str, version: int, type: str) -> ValidatedDict | None:
         with MySQLBase.SessionLocal() as session:
             arcadeSettings = session.query(ArcadeSettings).filter(ArcadeSettings.arcadeid == arcadeId, ArcadeSettings.game == game, ArcadeSettings.version == version, ArcadeSettings.type == type).first()
             if arcadeSettings is None:
                 return None
             else:
-                return JsonEncoded.deserialize(arcadeSettings.data)
+                return ValidatedDict(JsonEncoded.deserialize(arcadeSettings.data))
             
     def updateArcadeSettings(arcadeId: int, game: str, version: int, type_s: str, new_settings: dict) -> str | None:       
         with MySQLBase.SessionLocal() as session:
@@ -137,26 +156,26 @@ class ArcadeData:
             session.commit()
             return None
 
-    def fromName(arcadeName: str):
+    def fromName(arcadeName: str) -> ValidatedDict | None:
         with MySQLBase.SessionLocal() as session:
             arcade = session.query(Arcade).filter(Arcade.name == arcadeName).first()
             if arcade is None:
                 return None
             else:
-                return {
+                return ValidatedDict({
                     'id': int(arcade.id),
                     'name': arcade.name,
                     'description': arcade.description,
                     'pin': int(arcade.pin),
                     'data': JsonEncoded.deserialize(arcade.data)
-                }
+                })
             
-    def getArcadeName(arcadeId: int):
+    def getArcadeName(arcadeId: int) -> str | None:
         with MySQLBase.SessionLocal() as session:
             arcade = session.query(Arcade.name).filter(Arcade.id == arcadeId).first()
             return arcade.name
         
-    def getArcadeOwners(arcadeId: int):
+    def getArcadeOwners(arcadeId: int) -> list[int]:
         with MySQLBase.SessionLocal() as session:
             arcades = session.query(ArcadeOwner).filter(ArcadeOwner.arcadeid == arcadeId).all()
             if arcades is None:
@@ -164,7 +183,7 @@ class ArcadeData:
             
             return [arcade.userid for arcade in arcades]
         
-    def putArcadeOwner(arcadeId: int, userId: int):
+    def putArcadeOwner(arcadeId: int, userId: int) -> bool:
         with MySQLBase.SessionLocal() as session:
             try:
                 arcade = ArcadeOwner(userid = userId, arcadeid = arcadeId)
@@ -177,7 +196,7 @@ class ArcadeData:
             session.commit()
             return True
 
-    def getUserArcades(userId: int) -> dict:
+    def getUserArcades(userId: int) -> list[int]:
         with MySQLBase.SessionLocal() as session:
             arcades = session.query(ArcadeOwner).filter(ArcadeOwner.userid == userId).all()
             if arcades is None:
@@ -185,7 +204,11 @@ class ArcadeData:
             else:
                 return [arcade.arcadeid for arcade in arcades]
             
-    def checkOwnership(userId: int, arcadeId: int) -> dict:
+    def checkOwnership(userId: int, arcadeId: int) -> bool:
+        user = UserData.getUser(userId)
+        if user.get_bool('admin'):
+            return True
+
         with MySQLBase.SessionLocal() as session:
             arcade = session.query(ArcadeOwner).filter(ArcadeOwner.userid == userId, ArcadeOwner.arcadeid == arcadeId).first()
             if arcade is None:
