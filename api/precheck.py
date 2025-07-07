@@ -65,7 +65,7 @@ class RequestPreCheck():
             getter = type_getters.get(key_type)
             if getter and getter(key, None) is None:
                 try:
-                    changed_val = key_type(data.get(key, None), None)
+                    changed_val = key_type(data.get(key, None))
                     data[key] = changed_val
                 except:
                     return False, APIConstants.bad_end(f"`{key}` type {key_type.__name__} not found!\nFailed to find and convert type.")
@@ -96,7 +96,7 @@ class RequestPreCheck():
             getter = type_getters.get(key_type)
             if getter and getter(key, None) is None:
                 try:
-                    changed_val = key_type(data.get(key, None), None)
+                    changed_val = key_type(data.get(key, None))
                     data[key] = changed_val
                 except:
                     return False, APIConstants.bad_end(f"`{key}` type {key_type.__name__} not found!\nFailed to find and convert type.")
