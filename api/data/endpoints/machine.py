@@ -23,7 +23,6 @@ class MachineData:
                     'game': machine.game if machine.game else None,
                     'version': int(machine.version) if machine.version else None,
                     'ota': bool(machine.updaton),
-                    'cabinet': False,
                     'data': JsonEncoded.deserialize(machine.data)
                 }) for machine in machines]
             
