@@ -57,6 +57,15 @@ class UserAccount(Resource):
             member = BadManiac.getDiscordMember(discordLink.get_str('id'))
             backup_avatar = f"https://cdn.discordapp.com/avatars/{discordLink.get('id')}/{discordLink.get('avatar')}"
 
+        # Use this chance to update the user's avatar
+        if member.get_str('avatar'):
+            try:
+                avatar_spit = member.get_str('avatar').split('/')
+                avatar_hash = avatar_spit[-1].split('.')[0]
+                if (avatar_hash):
+                    UserData.updateUserData(reqUserId, ValidatedDict({'discord': {'avatar': avatar_hash}}))
+            except:
+                pass
 
         profiles = GameData.getUserGameSettings(reqUserId)
         arcades = []

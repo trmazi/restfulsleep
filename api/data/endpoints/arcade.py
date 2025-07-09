@@ -195,6 +195,20 @@ class ArcadeData:
 
             session.commit()
             return True
+        
+    def removeArcadeOwner(arcadeId: int, userId: int) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            try:
+                arcade = session.query(ArcadeOwner).filter_by(userid=userId, arcadeid=arcadeId).first()
+                if arcade is None:
+                    return False
+
+                session.delete(arcade)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                return False
 
     def getUserArcades(userId: int) -> list[int]:
         with MySQLBase.SessionLocal() as session:

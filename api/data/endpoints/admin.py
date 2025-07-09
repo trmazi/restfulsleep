@@ -82,7 +82,7 @@ class AdminData:
 
             return True
         
-    def getAllUsers() -> list[ValidatedDict]:
+    def getAllUsers(noData: bool = False) -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             userQuery = session.query(User.id, User.username, User.admin, User.banned, User.data)
             userQuery = userQuery.order_by(User.id.asc()).all()
@@ -92,7 +92,7 @@ class AdminData:
                     'username': user.username,
                     'admin': bool(user.admin),
                     'banned': bool(user.banned),
-                    'data': JsonEncoded.deserialize(user.data)
+                    'data': JsonEncoded.deserialize(user.data) if not noData else None
                 })
                 for user in userQuery
             ]

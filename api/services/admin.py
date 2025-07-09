@@ -65,6 +65,55 @@ class AdminArcade(Resource):
             'status': 'success'
         }, 200
     
+class AdminArcadeOwner(Resource):
+    def put(self, arcadeId: int):
+        '''
+        Add a new arcade owner
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        success = ArcadeData.putArcadeOwner(arcadeId, data.get_int('ownerId'))
+        if not success:
+            return APIConstants.bad_end("Failed to add arcade owner!")
+        
+        return {
+            'status': 'success'
+        }, 200
+    
+    def delete(self, arcadeId: int):
+        '''
+        Remove an arcade owner
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        success = ArcadeData.removeArcadeOwner(arcadeId, data.get_int('ownerId'))
+        if not success:
+            return APIConstants.bad_end("Failed to remove arcade owner!")
+        
+        return {
+            'status': 'success'
+        }, 200
+
 class AdminArcadeMachine(Resource):
     def post(self, arcadeId: int):
         '''
@@ -242,6 +291,16 @@ class AdminUsers(Resource):
         adminState, errorCode = RequestPreCheck.checkAdmin(session)
         if not adminState:
             return errorCode
+
+        argsState, args = RequestPreCheck.checkArgs()
+        if not argsState:
+            return args
+        
+        noData = args.get('noData', False)
+        try:
+            noData = bool(noData)
+        except:
+            return APIConstants.bad_end('noData was provided but it isn\'t a bool!')
         
         users = AdminData.getAllUsers()
         return {'status': 'success', 'data': users}
