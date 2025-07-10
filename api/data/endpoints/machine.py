@@ -72,9 +72,6 @@ class MachineData:
             
             machine.name = 'なし'
             machine.description = newMachine.get('name')
-            machine.pcbid = newMachine.get('PCBID')
-            machine.arcadeid = arcadeId
-            machine.port = port
             machine.updaton = newMachine.get('ota', False)
             machine.data = JsonEncoded.serialize(newMachine.get('data', {}))
 
@@ -90,6 +87,20 @@ class MachineData:
                 'ota': machine.updaton,
                 'data': JsonEncoded.deserialize(machine.data)
             })
+        
+    def deleteMachine(PCBID: str) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            try:
+                machine = session.query(Machine).filter_by(pcbid=PCBID).first()
+                if machine is None:
+                    return False
+
+                session.delete(machine)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                return False
             
     def fromPCBID(pcbid: str) -> ValidatedDict | None:
         with MySQLBase.SessionLocal() as session:

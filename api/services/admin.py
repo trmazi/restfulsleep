@@ -115,7 +115,7 @@ class AdminArcadeOwner(Resource):
         }, 200
 
 class AdminArcadeMachine(Resource):
-    def post(self, arcadeId: int):
+    def put(self, arcadeId: int):
         '''
         Create a new machine for an existing arcade
         '''
@@ -144,6 +144,72 @@ class AdminArcadeMachine(Resource):
         machine = MachineData.putMachine(None, arcadeId, formattedMachine)
         if not machine:
             return APIConstants.bad_end('Failed to add machine')
+        
+        return {
+            'status': 'success'
+        }, 200
+    
+    def post(self, arcadeId: int):
+        '''
+        Update a machine for an existing arcade
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedMachine = {
+            'name': data['name'],
+            'PCBID': data['PCBID'],
+            'port': None,
+            'ota': data['ota'],
+            'data': {
+                'cabinet': data['cabinet']
+            }
+        }
+
+        oldMachine = MachineData.fromPCBID(formattedMachine.get('PCBID'))
+        if not oldMachine:
+            return APIConstants.bad_end('PCBID not found.')
+        
+        machine = MachineData.putMachine(oldMachine.get_int('id'), arcadeId, formattedMachine)
+        if not machine:
+            return APIConstants.bad_end('Failed to add machine')
+        
+        return {
+            'status': 'success'
+        }, 200
+    
+    def delete(self, arcadeId: int):
+        '''
+        Delete a machine for an existing arcade
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedMachine = {
+            'PCBID': data['PCBID'],
+        }
+        
+        deleteState = MachineData.deleteMachine(formattedMachine.get('PCBID'))
+        if not deleteState:
+            return APIConstants.bad_end('Failed to delete machine!')
         
         return {
             'status': 'success'
