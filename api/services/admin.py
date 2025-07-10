@@ -65,6 +65,26 @@ class AdminArcade(Resource):
             'status': 'success'
         }, 200
     
+    def delete(self, arcadeId: int):
+        '''
+        Delete an arcade
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        error_state = ArcadeData.deleteArcade(arcadeId)
+        if not error_state:
+            return APIConstants.bad_end("Failed to delete arcade.")
+        
+        return {
+            'status': 'success'
+        }, 200
+    
 class AdminArcadeOwner(Resource):
     def put(self, arcadeId: int):
         '''

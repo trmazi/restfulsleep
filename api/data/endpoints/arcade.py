@@ -1,7 +1,7 @@
 from api.constants import ValidatedDict
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
-from api.data.types import Arcade, ArcadeOwner, ArcadeSettings
+from api.data.types import Arcade, ArcadeOwner, ArcadeSettings, Machine
 from api.data.data import BaseData
 from api.data.endpoints.user import UserData
 
@@ -204,6 +204,30 @@ class ArcadeData:
                     return False
 
                 session.delete(arcade)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                return False
+            
+    def deleteArcade(arcadeId: int) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            try:
+                owners = session.query(ArcadeOwner).filter_by(arcadeid=arcadeId).all()
+                if owners:
+                    for owner in owners:
+                        session.delete(owner)
+
+                machines = session.query(Machine).filter_by(arcadeid=arcadeId).all()
+                if machines:
+                    for machine in machines:
+                        session.delete(machine)
+
+                arcade = session.query(Arcade).filter_by(id=arcadeId).first()
+                if arcade is None:
+                    return False
+                session.delete(arcade)
+
                 session.commit()
                 return True
             except Exception as e:
