@@ -15,7 +15,10 @@ class Records(Resource):
         userId = None
         argsState, args = RequestPreCheck.checkArgs()
         if argsState:
-            userId = int(args.get_str('userId'))
+            try:
+                userId = int(args.get_str('userId', None))
+            except:
+                pass
         
         data = ScoreData.getAllRecords(game, userId)
         return {
