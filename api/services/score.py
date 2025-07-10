@@ -13,7 +13,7 @@ class Records(Resource):
             return session
         
         userId = None
-        argsState, args = RequestPreCheck.checkArgs({'userId': str})
+        argsState, args = RequestPreCheck.checkArgs()
         if argsState:
             userId = int(args.get_str('userId'))
         
