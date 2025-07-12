@@ -4,6 +4,7 @@ from flask_restful import Resource
 from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
+from api.data.endpoints.session import SessionData 
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.game import GameData
@@ -655,3 +656,65 @@ class UserAppVersion(Resource):
 
         return APIConstants.bad_end('Failed to update!')
     
+class UserReadNews(Resource):
+    '''
+    Handle updating user news states.
+    '''
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        session = ValidatedDict(session)
+        
+        dataState, data = RequestPreCheck.checkData({'newsId': int})
+        if not dataState:
+            return data
+        data = ValidatedDict(data)
+        
+        userId = session.get_int('id')
+        user = UserData.getUser(userId)
+        if not user:
+            return APIConstants.bad_end('No user found.')
+        
+        newsId = data.get_int('newsId')
+
+        seenNews = user.get_dict('data').get_dict('seen_news')
+        seenNews[str(newsId)] = True
+
+        update_state = UserData.updateUserData(userId, {'seen_news': seenNews})
+        if update_state:
+            return {'status': 'success'}
+
+        return APIConstants.bad_end('Failed to update!')
+
+class UserSessions(Resource):
+    '''
+    Handle user sessions.
+    '''
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        session = ValidatedDict(session)
+        
+        userId = session.get_int('id')
+
+        try:
+            sessions = SessionData.getAllSessions(userId)
+            return {'status': 'success', 'data': sessions}
+        except:
+            return APIConstants.bad_end('Failed to load sessions')
+        
+    def delete(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        session = ValidatedDict(session)
+        
+        userId = session.get_int('id')
+
+        try:
+            SessionData.deleteAllSessions(userId)
+            return {'status': 'success'}
+        except:
+            return APIConstants.bad_end('Failed to delete sessions')

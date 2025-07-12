@@ -44,10 +44,26 @@ class SessionData:
                     'active': False,
                     'id': None 
                 })
+            
+    def getAllSessions(userId: int) -> list[ValidatedDict]:
+        with MySQLBase.SessionLocal() as session:
+            userSessions = session.query(Session).filter(Session.id == userId, Session.type == 'userid').all()
+            if userSessions != None:
+                return [ValidatedDict({
+                    'expiration': int(session.expiration),
+                    'id': int(session.id)
+                }) for session in userSessions]
         
     def deleteSession(sessionID: str) -> None:
         with MySQLBase.SessionLocal() as session:
             session.query(Session).filter(Session.session == sessionID, Session.type == 'userid').delete()
+            session.commit()
+
+    def deleteAllSessions(userId: int) -> None:
+        with MySQLBase.SessionLocal() as session:
+            userSessions = session.query(Session).filter(Session.id == userId, Session.type == 'userid').all()
+            for userSession in userSessions:
+                session.delete(userSession)
             session.commit()
 
 class KeyData:

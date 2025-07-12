@@ -22,7 +22,7 @@ from api.services.admin import AdminDashboard, AdminArcade, AdminArcadeOwner, Ad
 from api.services.arcade import Arcade, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
-from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize, UserAppVersion
+from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize, UserAppVersion, UserReadNews, UserSessions
 from api.services.profiles import allPlayers, Profile, Achievements
 from api.services.music import Music
 from api.services.score import Attempts, Records, TopScore
@@ -96,6 +96,8 @@ api.add_resource(UserPlayVideos, '/v1/user/playVideos')
 api.add_resource(UserContent, '/v1/user/content')
 api.add_resource(UserCustomize, '/v1/user/customize')
 api.add_resource(UserAppVersion, '/v1/user/appVersion')
+api.add_resource(UserReadNews, '/v1/user/readNews')
+api.add_resource(UserSessions, '/v1/user/sessions')
 
 # Integration callbacks
 api.add_resource(IntegrateDiscord, '/v1/user/integrate/discord')
