@@ -2,7 +2,9 @@ from flask_restful import Resource
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
+from api.data.card import CardCipher
 from api.data.endpoints.admin import AdminData
+from api.data.endpoints.user import UserData
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
 from api.external.badmaniac import BadManiac
@@ -291,6 +293,32 @@ class OnboardArcade(Resource):
 
         return {'status': 'success', 'arcadeId': newArcade.get('id')}
     
+class AdminMachinePCBID(Resource):
+    def get(self, PCBID: str):
+        '''
+        Get a machine from a PCBID
+        PCBID being a 20 character string which is an access code for a machine. 
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        if len(PCBID) != 20:
+            return APIConstants.bad_end('PCBID must be 20 characters!')
+        
+        machine = MachineData.fromPCBID(PCBID)
+        if not machine:
+            return APIConstants.soft_end('PCBID not found.')
+
+        return {
+            'status': 'success',
+            'data': machine,
+        }, 200
+    
 class Maintenance(Resource):
     def get(self):
         sessionState, session = RequestPreCheck.getSession()
@@ -390,8 +418,35 @@ class AdminUsers(Resource):
         
         users = AdminData.getAllUsers()
         return {'status': 'success', 'data': users}
+
+class AdminUserCardId(Resource):
+    '''
+    Handle loading user data for admin management via a card ID
+    '''
+    def get(self, cardId: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        if len(cardId) != 16:
+            return APIConstants.bad_end('cardId must be 16 characters!')
+        
+        try:
+            cardId = CardCipher.decode(cardId)
+        except:
+            return APIConstants.soft_end('Bad encoding!')
+        
+        userId = UserData.cardExist(cardId)
+        if not userId:
+            return APIConstants.soft_end('Card not found!')
+
+        return {'status': 'success', 'data': {'id': userId}}
     
-class News(Resource):
+class AdminNews(Resource):
     def get(self):
         sessionState, session = RequestPreCheck.getSession()
         if not sessionState:
@@ -434,3 +489,49 @@ class News(Resource):
         
         news = AdminData.getAllNews()
         return {'status': 'success', 'data': news}
+    
+class AdminNewsPost(Resource):    
+    def post(self, newsId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        title = data.get_str('title', None)
+        if not title: 
+            return APIConstants.bad_end('No title provided!')
+        
+        body = data.get_str('body', None)
+        if not body: 
+            return APIConstants.bad_end('No body provided!')
+        
+        data = data.get_dict('data', None)
+        if not data: 
+            return APIConstants.bad_end('No data provided!')
+        
+        if not AdminData.putNews(title, body, data, newsId):
+            return APIConstants.bad_end('Failed to put news!')
+        
+        return {'status': 'success'}
+
+    def delete(self, newsId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        if not AdminData.deleteNews(newsId):
+            return APIConstants.bad_end('Failed to delete news!')
+        
+        return {'status': 'success'}
+    

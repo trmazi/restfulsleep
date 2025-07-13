@@ -112,15 +112,42 @@ class AdminData:
                 for news in newsQuery
             ]
         
-    def putNews(title: str = None, body: int = None, data: dict = {}) -> bool:
+    def putNews(title: str = None, body: str = None, data: dict = {}, newsId: int = None) -> bool:
         with MySQLBase.SessionLocal() as session:
-            newNews = News()
-            newNews.timestamp = Time.now()
-            newNews.title = title
-            newNews.body = body
-            newNews.data = JsonEncoded.serialize(data)
+            try:
+                if newsId is not None:
+                    news = session.query(News).filter_by(id=newsId).first()
+                    if not news:
+                        return False
+                else:
+                    news = News()
+                    news.timestamp = Time.now()
+                    session.add(news)
 
-            session.add(newNews)
-            session.commit()
+                if title is not None:
+                    news.title = title
+                if body is not None:
+                    news.body = body
+                if data is not None:
+                    news.data = JsonEncoded.serialize(data)
 
-            return True
+                session.commit()
+                return True
+
+            except Exception as e:
+                session.rollback()
+                return False
+            
+    def deleteNews(newsId: int):
+        with MySQLBase.SessionLocal() as session:
+            try:
+                news = session.query(News).filter_by(id=newsId).first()
+                if news is None:
+                    return False
+                
+                session.delete(news)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                return False
