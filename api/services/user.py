@@ -7,6 +7,7 @@ from api.data.card import CardCipher
 from api.data.endpoints.session import SessionData 
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.user import UserData
+from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
 from api.data.endpoints.score import ScoreData
 from api.external.badmaniac import BadManiac
@@ -69,6 +70,14 @@ class UserAccount(Resource):
                     pass
 
         profiles = GameData.getUserGameSettings(reqUserId)
+        for gameProfile in profiles:
+            profile = ProfileData.getProfile(gameProfile.get('game'), None, reqUserId, noData=True)
+            if not profile:
+                continue
+
+            username = profile.get('username')
+            gameProfile.replace_str('username', username)
+
         arcades = []
         if authUser:
             for arcade in ArcadeData.getUserArcades(reqUserId):

@@ -1,10 +1,11 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from sqlalchemy import distinct
+from sqlalchemy import distinct, func
 from api.data.mysql import MySQLBase
 from api.data.types import Profile, Refid
 from api.data.json import JsonEncoded
 from typing import Dict, Any, Set, List
 from api.data.data import BaseData
+from api.constants import ValidatedDict
 
 class ProfileData:
     @staticmethod
@@ -105,42 +106,31 @@ class ProfileData:
         
     def getProfile(game: str, version: int, userId: int, noData: bool = False) -> dict:
         with MySQLBase.SessionLocal() as session:
-
             profile = None
             if version:
-                refid_query = session.query(Refid).filter(
+                # Combine Refid and Profile queries into a single JOIN query
+                profile = session.query(Profile).join(Refid, Refid.refid == Profile.refid).filter(
                     Refid.userId == userId,
                     Refid.game == game,
                     Refid.version == version
                 ).first()
-
-                if refid_query:
-                    profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
             else:
-                refid_query = session.query(Refid).filter(
+                # Fetch the latest Refid and Profile in one query, ordering by version descending
+                profile = session.query(Profile).join(Refid, Refid.refid == Profile.refid).filter(
                     Refid.userId == userId,
                     Refid.game == game,
-                    (Refid.version < 10000)
-                ).all()
-
-                if refid_query:
-                    profile = session.query(Profile).filter(Profile.refid == refid_query[-1].refid).first()
+                    Refid.version < 10000
+                ).order_by(Refid.version.desc()).first()
 
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data)
-                rawData['machine_judge_adjust'] = None # Block exposing PCBIDs.
-                if not noData:
-                    return {
-                        'userId': userId,
-                        'username': rawData.get('username', rawData.get('name', '')),
-                        **rawData
-                    }
-                else:
-                    return {
-                        'userId': userId,
-                        'username': rawData.get('username', rawData.get('name', ''))
-                    }
-                
+                rawData['machine_judge_adjust'] = None  # Block exposing PCBIDs
+                return {
+                    'userId': userId,
+                    'username': rawData.get('username', rawData.get('name', '')),
+                    **(rawData if not noData else {})
+                }
+            
             return None
                 
     def getVersions(game: str, userId: int) -> dict:
@@ -153,6 +143,28 @@ class ProfileData:
 
             if refid_query:
                 return [refid.version for refid in refid_query]
+
+    def getProfileName(game: str, version: int, userId: int) -> str | None:
+        with MySQLBase.SessionLocal() as session:
+            if version:
+                refid = session.query(Refid.refid).filter_by(
+                    userId=userId,
+                    game=game,
+                    version=version
+                ).scalar()
+            else:
+                refid = session.query(Refid.refid).filter(
+                    Refid.userId == userId,
+                    Refid.game == game,
+                    Refid.version < 10000
+                ).order_by(Refid.version.desc()).limit(1).scalar()
+
+            if refid:
+                data = session.query(Profile.data).filter_by(refid=refid).scalar()
+                if data:
+                    deserialized = JsonEncoded.deserialize(data)
+                    return deserialized.get("username") or deserialized.get("name")
+            return None
             
     def updateProfile(game: str, version: int, userId: int, new_profile: dict) -> str | None:
         profile = ProfileData.getProfile(game, version, userId)

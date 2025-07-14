@@ -2,20 +2,21 @@ import concurrent.futures
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
 from api.data.types import GameSettings, Extid
+from api.constants import ValidatedDict
 
 class GameData:   
-    def getUserGameSettings(userId: int) -> dict:
+    def getUserGameSettings(userId: int) -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             games = session.query(GameSettings).filter(GameSettings.userid == userId).all()
             if games is None:
                 return None
             else:
-                return [{
+                return [ValidatedDict({
                     'game': game.game,
                     'data': JsonEncoded.deserialize(game.data)
-                } for game in games]
+                }) for game in games]
             
-    def getUserGameStats(game: str, userId: int) -> dict:
+    def getUserGameStats(game: str, userId: int) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
             game = session.query(GameSettings.data).filter(
                 GameSettings.userid == userId,
@@ -25,7 +26,7 @@ class GameData:
             if game is None:
                 return None
             else:
-                return JsonEncoded.deserialize(game.data)
+                return ValidatedDict(JsonEncoded.deserialize(game.data))
             
     def deserialize_game_data(game):
         return game.userid, JsonEncoded.deserialize(game.data)
