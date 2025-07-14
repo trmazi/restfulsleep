@@ -153,7 +153,7 @@ class UserData:
             else:
                 return True
             
-    def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None, public: bool = None) -> bool:
+    def updateUser(userId: int, newUsername: str = None, newEmail: str = None, newPin: str = None, public: bool = None, banned: bool = None) -> bool:
         with MySQLBase.SessionLocal() as session:
             user = session.query(User).filter(User.id == userId).first()
             if user is None:
@@ -174,6 +174,10 @@ class UserData:
 
                 if public != None:
                     user.public = int(public)
+                    didAnything = True
+
+                if banned != None:
+                    user.banned = int(banned)
                     didAnything = True
 
                 if didAnything:

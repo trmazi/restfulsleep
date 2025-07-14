@@ -418,6 +418,129 @@ class AdminUsers(Resource):
         
         users = AdminData.getAllUsers()
         return {'status': 'success', 'data': users}
+    
+class AdminUser(Resource):
+    def post(self, userId: int):
+        '''
+        Given new user params, save them.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+
+        username = None
+        email = None
+        pin = None
+        public = None
+        banned = None
+
+        try:
+            userId = int(userId)
+        except:
+            return APIConstants.bad_end('userId must be an integer!')
+
+        if not userId:
+            return APIConstants.bad_end('No userId!')
+
+        if data.get('name', None):
+            try:
+                username = str(data.get('name', None))
+            except:
+                return APIConstants.bad_end('Invalid name!')
+            
+            existingUser = UserData.getUserByName(username)
+            if existingUser and existingUser.get('id') != userId:
+                return APIConstants.bad_end('Username already taken.')
+
+        if data.get('email', None):
+            try:
+                email = str(data.get('email', None))
+            except:
+                return APIConstants.bad_end('Invalid email!')
+
+            splitEmail = email.split('@')
+            if len(splitEmail) != 2:
+                return APIConstants.bad_end('Invalid email!')
+            
+            if len(splitEmail[1].split('.')) != 2:
+                return APIConstants.bad_end('Invalid email!')
+
+        if data.get('pin', None):
+            try:
+                pin = str(data.get('pin', None))
+            except:
+                return APIConstants.bad_end('Invalid pin!')
+            
+            if len(pin) != 4 and len(pin) != 0:
+                return APIConstants.bad_end('PIN must be 4 characters!')
+            
+            if len(pin) == 0:
+                pin = None # If it's an empty string, we'll just forget it.
+
+        if data.get('public', None) != None:
+            try:
+                public = bool(data.get('public', False))
+            except:
+                return APIConstants.bad_end('Invalid public!')
+
+        if data.get('banned', None) != None:
+            try:
+                banned = bool(data.get('banned', False))
+            except:
+                return APIConstants.bad_end('Invalid banned!')
+            
+        if UserData.updateUser(userId, username, email, pin, public, banned):
+            return {'status': 'success'}
+
+        return APIConstants.bad_end('Failed to save!')
+    
+class AdminUserUpdatePassword(Resource):
+    def post(self, userId: int):
+        '''
+        Validate admin, validate user, changes password.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        newPassword = data.get('newPassword', None)
+        if newPassword == None:
+            return APIConstants.bad_end('No newPassword provided.')
+        
+        confirmPassword = data.get('confirmPassword', None)
+        if confirmPassword == None:
+            return APIConstants.bad_end('No confirmPassword confirmation provided.')
+        
+        if len(str(newPassword)) < 8:
+            return APIConstants.soft_end('Password must be at least 8 characters!')
+        
+        if newPassword != confirmPassword:
+            return APIConstants.soft_end('The passwords don\'t match!')
+        
+        user = UserData.getUser(userId)
+        if not user:
+            return APIConstants.bad_end('No user found.')
+
+        if UserData.updatePassword(userId, newPassword) == True:
+            return {'status': 'success'}
+        else:
+            return APIConstants.bad_end('Failed to update password!')
 
 class AdminUserCardId(Resource):
     '''
