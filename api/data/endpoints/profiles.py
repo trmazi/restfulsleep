@@ -79,12 +79,14 @@ class ProfileData:
         with MySQLBase.SessionLocal() as session:
             profile = None
             if version:
+                # Combine Refid and Profile queries into a single JOIN query
                 profile = session.query(Profile).join(Refid, Refid.refid == Profile.refid).filter(
                     Refid.userId == userId,
                     Refid.game == game,
                     Refid.version == version
                 ).first()
             else:
+                # Fetch the latest Refid and Profile in one query, ordering by version descending
                 profile = session.query(Profile).join(Refid, Refid.refid == Profile.refid).filter(
                     Refid.userId == userId,
                     Refid.game == game,
@@ -93,7 +95,7 @@ class ProfileData:
 
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data)
-                rawData['machine_judge_adjust'] = None
+                rawData['machine_judge_adjust'] = None # Block exposing PCBIDs
                 return {
                     'userId': userId,
                     'username': rawData.get('username', rawData.get('name', '')),
