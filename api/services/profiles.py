@@ -38,7 +38,7 @@ class allPlayers(Resource):
 
         if not profileData:
             profileData = []
-            profiles = ProfileData.getPlayers(game, version)
+            profiles = ProfileData.getAllProfiles(game, version)
             extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
             stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
 
