@@ -5,3 +5,5 @@ production.config.yaml
 development.config.yaml
 /upload_tmp
 *.lprof
+/RestfulSleep_API.egg-info
+/build
