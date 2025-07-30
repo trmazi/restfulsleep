@@ -1,4 +1,5 @@
 from sqlalchemy import func, and_, over, desc
+from sqlalchemy import aliased
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 from api.data.mysql import MySQLBase

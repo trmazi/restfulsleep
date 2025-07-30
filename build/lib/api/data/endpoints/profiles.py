@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from sqlalchemy import func, and_
+from sqlalchemy import distinct, func
 from api.data.mysql import MySQLBase
 from api.data.types import Profile, Refid
 from api.data.json import JsonEncoded
@@ -24,21 +24,22 @@ class ProfileData:
                         Refid.game == game,
                         Refid.version == version
                     )
-                    .yield_per(1000)
+                    .all()
                 )
 
             else:
                 latest_version_subquery = (
                     session.query(
                         Refid.userId,
-                        func.max(Refid.version).label("max_version"),
+                        func.max(Refid.version).label("max_version")
                     )
                     .filter(
                         Refid.game == game,
                         Refid.version < 10000
                     )
                     .group_by(Refid.userId)
-                ).subquery()
+                    .subquery("latest_refid")
+                )
 
                 query_results = (
                     session.query(
@@ -48,14 +49,12 @@ class ProfileData:
                     )
                     .join(
                         latest_version_subquery,
-                        and_(
-                            Refid.userId == latest_version_subquery.c.userId,
-                            Refid.version == latest_version_subquery.c.max_version,
-                        ),
+                        (Refid.userId == latest_version_subquery.c.userId) &
+                        (Refid.version == latest_version_subquery.c.max_version)
                     )
                     .join(Profile, Refid.refid == Profile.refid)
                     .filter(Refid.game == game)
-                    .yield_per(1000)
+                    .all()
                 )
 
             for userId, maxVersion, profile_data in query_results:

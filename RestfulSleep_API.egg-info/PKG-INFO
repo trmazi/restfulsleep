@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: RestfulSleep-API
+Version: 1.1
+Summary: PhaseII Network's powerful API built on Flask and REST
+Author: PhaseII Team
+License: Public Domain
+License-File: LICENSE
+Requires-Dist: python-dateutil
+Requires-Dist: flask
+Requires-Dist: flask_restful
+Requires-Dist: flask_cors
+Requires-Dist: mysql.connector
+Requires-Dist: sqlalchemy
+Requires-Dist: pyyaml
+Requires-Dist: argparse
+Requires-Dist: requests
+Requires-Dist: passlib
+Requires-Dist: pycryptodome
+Requires-Dist: discord-webhook
+Requires-Dist: b2sdk==2.8.1
+Requires-Dist: pillow
+Dynamic: author
+Dynamic: license
+Dynamic: license-file
+Dynamic: requires-dist
+Dynamic: summary
