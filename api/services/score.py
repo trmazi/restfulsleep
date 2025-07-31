@@ -1,6 +1,5 @@
 from flask_restful import Resource
 from flask import request
-
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck, UserData
 from api.data.endpoints.music import MusicData

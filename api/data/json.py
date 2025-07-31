@@ -1,12 +1,5 @@
 from typing import Optional, Dict, Any
-import json
-
-class _BytesEncoder(json.JSONEncoder):
-    def default(self, obj: Any) -> Any:
-        if isinstance(obj, bytes):
-            # We're abusing lists here, we have a mixed type
-            return ['__bytes__'] + [b for b in obj]  # type: ignore
-        return json.JSONEncoder.default(self, obj)
+import ujson
 
 class JsonEncoded:
     @staticmethod
@@ -14,7 +7,7 @@ class JsonEncoded:
         if data is None:
             return {}
 
-        deserialized_data = json.loads(data)
+        deserialized_data = ujson.loads(data)
 
         if not include_bytes:
             return deserialized_data
@@ -22,25 +15,32 @@ class JsonEncoded:
         def fix(jd: Any) -> Any:
             if isinstance(jd, list):
                 if len(jd) >= 1 and jd[0] == '__bytes__':
-                    if include_bytes:
-                        try:
-                            return bytes(bytearray(jd[1:]))
-                        except TypeError:
-                            print(f"Malformed byte: {jd}")
-                    else:
+                    try:
+                        return bytes(bytearray(jd[1:]))
+                    except TypeError:
+                        print(f"Malformed byte: {jd}")
                         return jd
-
                 return [fix(item) for item in jd]
-
             elif isinstance(jd, dict):
                 return {key: fix(value) for key, value in jd.items()}
-
             return jd
 
-        return fix(deserialized_data) 
-    
+        return fix(deserialized_data)
+
+    @staticmethod
     def serialize(data: Dict[str, Any]) -> str:
         """
-        Given an arbitrary dict, serialize it to JSON.
+        Given an arbitrary dict, serialize it to JSON using ujson.
         """
-        return json.dumps(data, cls=_BytesEncoder).encode('utf-8')
+
+        def preprocess(obj: Any) -> Any:
+            if isinstance(obj, bytes):
+                return ['__bytes__'] + list(obj)
+            elif isinstance(obj, dict):
+                return {k: preprocess(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [preprocess(item) for item in obj]
+            return obj
+
+        serialized_data = preprocess(data)
+        return ujson.dumps(serialized_data)

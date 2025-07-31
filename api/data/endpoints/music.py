@@ -2,6 +2,7 @@ from api.data.mysql import MySQLBase
 from api.data.types import Music
 from api.data.json import JsonEncoded
 from api.data.cache import LocalCache
+from sqlalchemy import func, and_
 
 class MusicData:
     @staticmethod
@@ -13,16 +14,32 @@ class MusicData:
 
         if not musicData:
             with MySQLBase.SessionLocal() as session:
-                musicQuery = (
-                    session.query(Music)
-                    .filter(Music.game == game, Music.songid.in_(song_ids) if song_ids else True, Music.chart == chart if chart else True)
-                    .order_by(Music.songid.desc())
+                subquery = (
+                    session.query(
+                        Music.songid.label('songid'),
+                        func.max(Music.version).label('max_version')
+                    )
+                    .group_by(Music.songid)
+                ).subquery()
+
+                musicQuery = session.query(Music).join(
+                    subquery,
+                    and_(
+                        Music.songid == subquery.c.songid,
+                        Music.version == subquery.c.max_version
+                    )
                 )
 
-                if version is not None:
-                    musicQuery = musicQuery.filter(Music.version == version)
+                if game is not None:
+                    musicQuery = musicQuery.filter(Music.game == game)
+                if song_ids:
+                    musicQuery = musicQuery.filter(Music.songid.in_(song_ids))
+                if chart is not None:
+                    musicQuery = musicQuery.filter(Music.chart == chart)
 
-                result = musicQuery.all()
+                musicQuery = musicQuery.order_by(Music.songid.desc())
+
+                result = musicQuery.yield_per(10000)
 
             # To ensure unique (db_id, chart) pairs
             seen = set()
