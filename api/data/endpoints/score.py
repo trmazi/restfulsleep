@@ -41,7 +41,7 @@ class ScoreData:
                     windowquery = windowquery.filter(Score.lid == machineId)
 
                 subquery = windowquery.subquery()
-                ScoreRanked = aliased(Score, subquery)
+                ScoreRanked = aliased(Score, subquery) # type: ignore
 
                 bestScores = (
                     session.query(ScoreRanked)
