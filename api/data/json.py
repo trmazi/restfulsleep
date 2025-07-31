@@ -28,7 +28,7 @@ class JsonEncoded:
         return fix(deserialized_data)
 
     @staticmethod
-    def serialize(data: Dict[str, Any]) -> str:
+    def serialize(data: Dict[str, Any]) -> bytes:
         """
         Given an arbitrary dict, serialize it to JSON using ujson.
         """
@@ -43,4 +43,4 @@ class JsonEncoded:
             return obj
 
         serialized_data = preprocess(data)
-        return ujson.dumps(serialized_data)
+        return ujson.dumps(serialized_data).encode('utf-8')
