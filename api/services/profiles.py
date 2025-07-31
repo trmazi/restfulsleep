@@ -31,6 +31,7 @@ class allPlayers(Resource):
                 version = None
         
         cacheName = f'juiced_profiles_{game}'
+
         if not version:
             profileData = LocalCache().getCachedData(cacheName)
         else:
@@ -38,11 +39,16 @@ class allPlayers(Resource):
 
         if not profileData:
             profileData = []
-            profiles = ProfileData.getPlayers(game, version)
-            extIds = {extid[0]: extid[1] for extid in GameData.getAllExtid(game)}
-            stats = {stat[0]: stat[1] for stat in GameData.getAllGameStats(game)}
+            with concurrent.futures.ThreadPoolExecutor() as executor:
+                thread_profiles = executor.submit(ProfileData.getAllProfiles, game, version)
+                thread_extids = executor.submit(GameData.getAllExtid, game)
+                thread_stats = executor.submit(GameData.getAllGameStats, game)
 
-            with concurrent.futures.ProcessPoolExecutor() as executor:
+                profiles = thread_profiles.result()
+                extIds = {extid[0]: extid[1] for extid in thread_extids.result()}
+                stats = {stat[0]: stat[1] for stat in thread_stats.result()}
+
+            with concurrent.futures.ThreadPoolExecutor() as executor:
                 futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
                 for future in concurrent.futures.as_completed(futures):
                     result = future.result()

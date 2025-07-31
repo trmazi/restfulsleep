@@ -24,7 +24,7 @@ class Music(Resource):
                 filteredSongIds.append(int(songId))
             
         filteredVersion = int(version)
-        data = MusicData.getAllMusic(game = game, version = filteredVersion, song_ids = filteredSongIds, chart = 1 if oneChart else None)
+        data = MusicData.getAllMusic(game = game, version = filteredVersion, song_ids = filteredSongIds, chart = 0 if oneChart else None)
         return {
             'status': 'success',
             'data': data

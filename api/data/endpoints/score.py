@@ -1,4 +1,4 @@
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, over, desc
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import List, Dict
 from api.data.mysql import MySQLBase
@@ -25,27 +25,27 @@ class ScoreData:
 
         if not cacheData:
             with MySQLBase.SessionLocal() as session:
-                subquery = (
-                    session.query(
-                        Score.musicid,
-                        func.max(Score.points).label("max_points")
-                    )
-                    .filter(Score.musicid.in_(allDBId))
+                windowquery = session.query(
+                    Score,
+                    func.row_number().over(
+                        partition_by=Score.musicid,
+                        order_by=[Score.points.desc(), Score.timestamp.asc()]
+                    ).label("rank")
+                ).filter(
+                    Score.musicid.in_(allDBId)
                 )
 
                 if userId is not None:
-                    subquery = subquery.filter(Score.userid == userId)
+                    windowquery = windowquery.filter(Score.userid == userId)
                 if machineId is not None:
-                    subquery = subquery.filter(Score.lid == machineId)
-                subquery = subquery.group_by(Score.musicid).subquery()
+                    windowquery = windowquery.filter(Score.lid == machineId)
+
+                subquery = windowquery.subquery()
+                ScoreRanked = aliased(Score, subquery)
 
                 bestScores = (
-                    session.query(Score)
-                    .join(subquery, and_(
-                        Score.musicid == subquery.c.musicid,
-                        Score.points == subquery.c.max_points
-                    ))
-                    .order_by(Score.musicid, Score.timestamp.asc())  # earliest timestamp if tie
+                    session.query(ScoreRanked)
+                    .filter(subquery.c.rank == 1)
                     .all()
                 )
                 bestScoresByDBId = {score.musicid: score for score in bestScores}

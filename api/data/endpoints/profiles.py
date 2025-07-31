@@ -1,5 +1,5 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from sqlalchemy import distinct, func
+from sqlalchemy import func, and_
 from api.data.mysql import MySQLBase
 from api.data.types import Profile, Refid
 from api.data.json import JsonEncoded
@@ -9,98 +9,70 @@ from api.constants import ValidatedDict
 
 class ProfileData:
     @staticmethod
-    def getPlayers(game: str, version: int = None) -> List[Dict[str, Any]]:
-        def fetch_profile_for_version(userId: int, version: int) -> Dict[str, Any]:
-            with MySQLBase.SessionLocal() as session:
-                refid_query = session.query(Refid).filter(
-                    Refid.userId == userId,
-                    Refid.game == game,
-                    Refid.version == version
-                ).first()
-
-                if refid_query:
-                    profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
-
-                    if profile:
-                        rawData = JsonEncoded.deserialize(profile.data)
-                        return {
-                            'userId': userId,
-                            'maxVersion': refid_query.version,
-                            'username': rawData.get('username', rawData.get('name', '')),
-                            'sgrade': rawData.get('sgrade', None),
-                            'dgrade': rawData.get('dgrade', None),
-                            'block': rawData.get('block', None),
-                            'packet': rawData.get('packet', None),
-                            'skill_level': rawData.get('skill_level', None),
-                            'jubility': (rawData.get('jubility', 0)) / 10,
-                            'profile_skill': (rawData.get('profile_skill', 0)) / 100,
-                            'skill': (rawData.get('skill', 0)) / 100,
-                        }
-            return None
-
-        def fetch_latest_profile(userId: int) -> Dict[str, Any]:
-            with MySQLBase.SessionLocal() as session:
-                refid_query = session.query(Refid).filter(
-                    Refid.userId == userId,
-                    Refid.game == game,
-                    (Refid.version < 10000)  # Exclude versions with the bump
-                ).order_by(Refid.version.desc()).first()
-
-                if refid_query:
-                    profile = session.query(Profile).filter(Profile.refid == refid_query.refid).first()
-
-                    if profile:
-                        rawData = JsonEncoded.deserialize(profile.data)
-                        return {
-                            'userId': userId,
-                            'maxVersion': refid_query.version,
-                            'username': rawData.get('username', rawData.get('name', '')),
-                            'sgrade': rawData.get('sgrade', None),
-                            'dgrade': rawData.get('dgrade', None),
-                            'block': rawData.get('block', None),
-                            'packet': rawData.get('packet', None),
-                            'skill_level': rawData.get('skill_level', None),
-                            'jubility': (rawData.get('jubility', 0)) / 10,
-                            'profile_skill': (rawData.get('profile_skill', 0)) / 100,
-                            'skill': (rawData.get('skill', 0)) / 100,
-                        }
-            return None
-
-        with MySQLBase.SessionLocal() as session:
-            userIds: Set[int] = set()
-
-            if version is not None:
-                # Only get user IDs for the specific version
-                version_userIds = session.query(Refid.userId).filter(
-                    Refid.game == game,
-                    Refid.version == version
-                ).all()
-                userIds.update(userId for (userId,) in version_userIds)
-            else:
-                # Get all user IDs for all valid versions (excluding bumps)
-                versions = session.query(distinct(Refid.version)).filter(Refid.game == game).all()
-                for version_row in versions:
-                    v = version_row[0]
-                    if v >= 10000 and v < 20000:
-                        continue  # skip bump versions
-                    version_userIds = session.query(Refid.userId).filter(
-                        Refid.game == game,
-                        Refid.version == v
-                    ).all()
-                    userIds.update(userId for (userId,) in version_userIds)
-
-        # Step 2: Get profile information in parallel
+    def getAllProfiles(game: str, version: int = None) -> List[Dict[str, Any]]:
         profiles = []
-        with ThreadPoolExecutor(max_workers=10) as executor:
+        with MySQLBase.SessionLocal() as session:
             if version is not None:
-                futures = [executor.submit(fetch_profile_for_version, userId, version) for userId in userIds]
-            else:
-                futures = [executor.submit(fetch_latest_profile, userId) for userId in userIds]
+                query_results = (
+                    session.query(
+                        Refid.userId,
+                        Refid.version,
+                        Profile.data
+                    )
+                    .join(Profile, Refid.refid == Profile.refid)
+                    .filter(
+                        Refid.game == game,
+                        Refid.version == version
+                    )
+                    .yield_per(1000)
+                )
 
-            for future in as_completed(futures):
-                profile_info = future.result()
-                if profile_info:
-                    profiles.append(profile_info)
+            else:
+                latest_version_subquery = (
+                    session.query(
+                        Refid.userId,
+                        func.max(Refid.version).label("max_version"),
+                    )
+                    .filter(
+                        Refid.game == game,
+                        Refid.version < 10000
+                    )
+                    .group_by(Refid.userId)
+                ).subquery()
+
+                query_results = (
+                    session.query(
+                        Refid.userId,
+                        Refid.version,
+                        Profile.data
+                    )
+                    .join(
+                        latest_version_subquery,
+                        and_(
+                            Refid.userId == latest_version_subquery.c.userId,
+                            Refid.version == latest_version_subquery.c.max_version,
+                        ),
+                    )
+                    .join(Profile, Refid.refid == Profile.refid)
+                    .filter(Refid.game == game)
+                    .yield_per(1000)
+                )
+
+            for userId, maxVersion, profile_data in query_results:
+                rawData = JsonEncoded.deserialize(profile_data)
+                profiles.append({
+                    'userId': userId,
+                    'maxVersion': maxVersion,
+                    'username': rawData.get('username', rawData.get('name', '')),
+                    'sgrade': rawData.get('sgrade', None),
+                    'dgrade': rawData.get('dgrade', None),
+                    'block': rawData.get('block', None),
+                    'packet': rawData.get('packet', None),
+                    'skill_level': rawData.get('skill_level', None),
+                    'jubility': (rawData.get('jubility', 0)) / 10,
+                    'profile_skill': (rawData.get('profile_skill', 0)) / 100,
+                    'skill': (rawData.get('skill', 0)) / 100,
+                })
 
         return profiles
         
@@ -124,7 +96,7 @@ class ProfileData:
 
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data)
-                rawData['machine_judge_adjust'] = None  # Block exposing PCBIDs
+                rawData['machine_judge_adjust'] = None # Block exposing PCBIDs
                 return {
                     'userId': userId,
                     'username': rawData.get('username', rawData.get('name', '')),
