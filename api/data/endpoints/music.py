@@ -14,27 +14,24 @@ class MusicData:
 
         if not musicData:
             with MySQLBase.SessionLocal() as session:
-                musicQuery = session.query(Music)
+                musicQuery = (
+                    session.query(Music)
+                    .filter(Music.game == game, Music.songid.in_(song_ids) if song_ids else True, Music.chart == chart if chart else True)
+                    .order_by(Music.songid.desc())
+                )
 
-                if game is not None:
-                    musicQuery = musicQuery.filter(Music.game == game)
-                if song_ids:
-                    musicQuery = musicQuery.filter(Music.songid.in_(song_ids))
-                if chart is not None:
-                    musicQuery = musicQuery.filter(Music.chart == chart)
                 if version is not None:
-                    musicQuery = musicQuery.filter(Music.version <= version)
+                    musicQuery = musicQuery.filter(Music.version == version)
 
-                musicQuery = musicQuery.order_by(Music.songid.desc())
-
-                result = musicQuery.yield_per(10000)
+                result = musicQuery.all()
 
             # To ensure unique (db_id, chart) pairs
             seen = set()
             musicData = []
             for song in result:
-                if (song.id, song.chart) not in seen:
-                    seen.add((song.id, song.chart))
+                songKey = (song.id, song.chart)
+                if songKey not in seen:
+                    seen.add(songKey)
                     musicData.append({
                         'db_id': song.id,
                         'id': song.songid,
