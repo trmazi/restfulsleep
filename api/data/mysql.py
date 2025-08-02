@@ -21,7 +21,9 @@ class MySQLBase:
         MySQLBase.engine = create_engine(
             connection_string,
             pool_pre_ping=True,
-            pool_recycle=1800
+            pool_recycle=1800,
+            pool_size=10,
+            max_overflow=20
         )
         MySQLBase.SessionLocal = sessionmaker(bind=MySQLBase.engine)
 

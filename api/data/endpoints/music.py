@@ -14,21 +14,7 @@ class MusicData:
 
         if not musicData:
             with MySQLBase.SessionLocal() as session:
-                subquery = (
-                    session.query(
-                        Music.songid.label('songid'),
-                        func.max(Music.version).label('max_version')
-                    )
-                    .group_by(Music.songid)
-                ).subquery()
-
-                musicQuery = session.query(Music).join(
-                    subquery,
-                    and_(
-                        Music.songid == subquery.c.songid,
-                        Music.version == subquery.c.max_version
-                    )
-                )
+                musicQuery = session.query(Music)
 
                 if game is not None:
                     musicQuery = musicQuery.filter(Music.game == game)
@@ -36,6 +22,8 @@ class MusicData:
                     musicQuery = musicQuery.filter(Music.songid.in_(song_ids))
                 if chart is not None:
                     musicQuery = musicQuery.filter(Music.chart == chart)
+                if version is not None:
+                    musicQuery = musicQuery.filter(Music.version <= version)
 
                 musicQuery = musicQuery.order_by(Music.songid.desc())
 
