@@ -18,7 +18,7 @@ from api.external.badmaniac import BadManiac
 
 # Services
 from api.services.discord import OnboardingVPN, OnboardingArcade
-from api.services.admin import AdminDashboard, AdminArcade, AdminArcadeOwner, AdminArcadeMachine, AdminArcades, OnboardArcade, AdminMachinePCBID, Maintenance, Client, AdminUsers, AdminUser, AdminUserUpdatePassword, AdminUserCardId, AdminNews, AdminNewsPost
+from api.services.admin import AdminDashboard, AdminAudit, AdminArcade, AdminArcadeOwner, AdminArcadeMachine, AdminArcades, OnboardArcade, AdminMachinePCBID, Maintenance, Client, AdminUsers, AdminUser, AdminUserUpdatePassword, AdminUserCardId, AdminNews, AdminNewsPost
 from api.services.arcade import Arcade, ArcadeSettings, Paseli, VPN, CheckArcadeName, CheckPCBID, ArcadeTakeover
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
@@ -54,6 +54,7 @@ api.add_resource(restfulTop, '/')
 
 # Admin
 api.add_resource(AdminDashboard, '/v1/admin')
+api.add_resource(AdminAudit, '/v1/admin/audit')
 api.add_resource(AdminArcade, '/v1/admin/arcade/<arcadeId>')
 api.add_resource(AdminArcadeOwner, '/v1/admin/arcade/<arcadeId>/owner')
 api.add_resource(AdminArcadeMachine, '/v1/admin/arcade/<arcadeId>/machine')

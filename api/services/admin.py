@@ -23,6 +23,24 @@ class AdminDashboard(Resource):
         audit = AdminData.getRecentAuditEvents(40)
         return {'status': 'success', 'data': {'statistics': statistics, 'audit': audit}}
     
+class AdminAudit(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        auditData = {}
+
+        auditKeys = ['avs_updater', 'exception', 'iidx_daily_charts', 'iidx_weekly', 'jubeat_fc_challenge_charts', 'jubeat_league_course', 'paseli_transaction', 'pcbevent', 'pnm_course', 'unhandled_packet']
+        for key in auditKeys:
+            auditData[key] = AdminData.getRecentAuditEvents(200, key)
+
+        return {'status': 'success', 'data': auditData}
+    
 class AdminArcades(Resource):
     def get(self):
         sessionState, session = RequestPreCheck.getSession()
