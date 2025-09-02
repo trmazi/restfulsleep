@@ -76,7 +76,7 @@ class ProfileData:
 
         return profiles
         
-    def getProfile(game: str, version: int, userId: int, noData: bool = False) -> dict:
+    def getProfile(game: str, version: int, userId: int, noData: bool = False) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
             profile = None
             if version:
@@ -97,11 +97,11 @@ class ProfileData:
             if profile:
                 rawData = JsonEncoded.deserialize(profile.data)
                 rawData['machine_judge_adjust'] = None # Block exposing PCBIDs
-                return {
+                return ValidatedDict({
                     'userId': userId,
                     'username': rawData.get('username', rawData.get('name', '')),
                     **(rawData if not noData else {})
-                }
+                })
             
             return None
                 

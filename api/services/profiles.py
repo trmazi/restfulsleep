@@ -8,6 +8,7 @@ from api.data.endpoints.user import UserData
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.achievements import AchievementData
 from api.data.endpoints.game import GameData
+from api.data.endpoints.links import LinkData
 from api.data.cache import LocalCache
 
 class allPlayers(Resource):
@@ -170,3 +171,37 @@ class Achievements(Resource):
             'status': 'success',
             'data': loadedAchievements
         }, 200
+
+class Links(Resource):
+    def get(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        args = ValidatedDict(request.args)
+        version = int(args.get_str('version'))
+        userId = int(args.get_str('userId'))
+
+        if not userId:
+            return APIConstants.bad_end('No userId!')
+        
+        sessionUserId = session.get_int('id', -1)
+        if sessionUserId != int(userId):
+            return APIConstants.bad_end('This isn\'t your profile!')
+        
+        versions = ProfileData.getVersions(game, userId)
+        if not version or version == 'null' and versions:
+            version = versions[-1] if len(versions) > 1 else versions[0]
+
+        linkData = LinkData.getAllLinks(game, version, userId)
+        if linkData:
+            for link in linkData:
+                otherUserId = link.get_int('otherUserId')
+                otherProfile = ProfileData.getProfile(game, version, otherUserId, True)
+                link.replace_dict('otherProfileData', {"username": otherProfile.get_str('username')})
+        
+        return {
+            'status': 'success',
+            'data': linkData
+        }, 200
+    
