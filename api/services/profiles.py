@@ -205,3 +205,84 @@ class Links(Resource):
             'data': linkData
         }, 200
     
+class Link(Resource):
+    def put(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData({
+            'version': int,
+            'userId': int,
+            'otherUserId': int,
+            'type': str
+        })
+        if not dataState:
+            return data
+
+        version = data.get_int('version')
+        userId = data.get_int('userId')
+        otherUserId = data.get_int('otherUserId')
+        linkType = data.get_str('type')
+
+        if not userId:
+            return APIConstants.bad_end('No userId!')
+        
+        if not otherUserId:
+            return APIConstants.bad_end('No otherUserId!')
+        
+        if not version:
+            return APIConstants.bad_end('No version!')
+        
+        sessionUserId = session.get_int('id', -1)
+        if sessionUserId != int(userId):
+            return APIConstants.bad_end('This isn\'t your profile!')
+
+        linkState = LinkData.putLink(game, version, userId, otherUserId, linkType)
+        if not linkState:
+            return APIConstants.bad_end('Failed to put link!')
+        
+        return {
+            'status': 'success',
+        }, 200
+    
+    def delete(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        dataState, data = RequestPreCheck.checkData({
+            'version': int,
+            'userId': int,
+            'otherUserId': int,
+            'type': str
+        })
+        if not dataState:
+            return data
+
+        version = data.get_int('version')
+        userId = data.get_int('userId')
+        otherUserId = data.get_int('otherUserId')
+        linkType = data.get_str('type')
+
+        if not userId:
+            return APIConstants.bad_end('No userId!')
+        
+        if not otherUserId:
+            return APIConstants.bad_end('No otherUserId!')
+        
+        if not version:
+            return APIConstants.bad_end('No version!')
+        
+        sessionUserId = session.get_int('id', -1)
+        if sessionUserId != int(userId):
+            return APIConstants.bad_end('This isn\'t your profile!')
+
+        linkState = LinkData.deleteLink(game, version, userId, otherUserId, linkType)
+        if not linkState:
+            return APIConstants.bad_end('Failed to delete link!')
+        
+        return {
+            'status': 'success',
+        }, 200
+    

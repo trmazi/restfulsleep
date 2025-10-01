@@ -53,7 +53,6 @@ class OnboardingArcade(Resource):
             return APIConstants.bad_end('No Discord ID!')
         
         failedResponse = BadManiac.sendArcadeOnboarding(discordId, arcadeId)
-        print(failedResponse)
         if failedResponse == None:
             return {'status': 'success'}
         else:
