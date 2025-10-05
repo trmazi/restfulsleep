@@ -3,6 +3,7 @@ from flask import Response, request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
+from api.data.card import CardCipher
 from api.data.endpoints.arcade import ArcadeData
 from api.data.endpoints.machine import MachineData
 from api.data.endpoints.paseli import PaseliData
@@ -202,6 +203,50 @@ class Paseli(Resource):
             returnData['transactions'] = transactions
         
         return {'status': 'success', 'data': returnData}
+    
+    def post(self, arcadeId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get_int('id')
+        if not ArcadeData.checkOwnership(userId, arcadeId):
+            return APIConstants.bad_end('You don\'t own this arcade or it doesn\'t exist!')
+        
+        dataState, data = RequestPreCheck.checkData({'cardId': str, 'credit': int})
+        if not dataState:
+            return data
+        
+        reqUserId = data.get_int('userId', None)
+        if not reqUserId:     
+            if data.get_str('cardId', None):
+                try:
+                    cardId = str(data.get('cardId', None))
+                except:
+                    return APIConstants.bad_end('Invalid cardId.')
+            else:
+                return APIConstants.bad_end('No cardId provided!')
+            
+            try:
+                cardId = CardCipher.decode(cardId)
+            except:
+                try:
+                    CardCipher.encode(cardId)
+                except:
+                    return APIConstants.bad_end('Bad cardId encoding!')
+
+            reqUserId = UserData.cardExist(cardId)
+
+        print(reqUserId)
+
+        reqUser = UserData.getUser(reqUserId)
+        if not reqUser:
+            return APIConstants.bad_end('No user found.')
+        
+        PaseliData.putArcadeBalance(arcadeId, reqUserId, data.get_int('credit'))
+        PaseliData.putTransaction(arcadeId, reqUserId, data.get_int('credit'))
+        
+        return {'status': 'success'}
     
 class CheckArcadeName(Resource):
     '''
