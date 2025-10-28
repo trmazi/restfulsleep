@@ -7,8 +7,12 @@ cache:
   cache_path: /var/restfulcache
   expiration: 300
 
+flask:
+  secret_key: "your_secure_key_here"
+  secure_cookie: True
+
 crypto:
-  cookie_key:
+  cookie_key: "your_cookie_key_here"
 
 pfsense:
     server: 

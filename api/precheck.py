@@ -4,29 +4,20 @@ from api.constants import APIConstants, ValidatedDict
 from api.data.endpoints.session import SessionData
 from api.data.endpoints.user import UserData
 
-class RequestPreCheck():
+class RequestPreCheck:
     def getSession() -> Tuple[bool, ValidatedDict]:
-        '''
-        Checks a user's session via a their auth key. Key is sent in headers as `User-Auth-Key`.
-        Returns a tuple of a bool representing session state and a dict containing either a session or an error code.
-        '''
-        userAuthCode = request.headers.get('User-Auth-Key')
-        if not userAuthCode:
-            return (False, APIConstants.bad_end('No user auth provided!'))
+        session_id = request.cookies.get('User-Auth-Key')
+        if not session_id:
+            return (False, APIConstants.bad_end('No User-Auth-Key provided!'))
         
-        decryptedSession = None
-        try:
-            decryptedSession = SessionData.AES.decrypt(userAuthCode)
-        except:
-            return (False, APIConstants.bad_end('Unable to decrypt SessionId!'))
-        
+        decryptedSession = SessionData.AES.decrypt(session_id)
         if not decryptedSession:
-            return (False, APIConstants.bad_end('Unable to decrypt SessionId!'))
+            return (False, APIConstants.bad_end('Unable to decrypt User-Auth-Key!'))
 
         session = SessionData.checkSession(decryptedSession)
-        if session.get('active') != True:
-            return (False, APIConstants.bad_end('Invalid user session!'))
-        
+        if not session or session.get('active') != True:
+            return (False, APIConstants.bad_end('No session found!'))
+
         return (True, session)
     
     def checkAdmin(session: ValidatedDict) -> Tuple[bool, ValidatedDict]:

@@ -1,4 +1,6 @@
+from flask import make_response, request
 from flask_restful import Resource
+from typing import Dict, Any
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
@@ -8,6 +10,16 @@ from api.data.endpoints.user import UserData
 from api.external.mailjet import MailjetSMTP
 
 class UserSession(Resource):
+    SECURE_COOKIE = True
+
+    @staticmethod
+    def updateConfig(flaskConfig: Dict[str, Any]) -> None:
+        secure_cookie = flaskConfig.get('secure_cookie', None)
+        if secure_cookie == None:
+            raise Exception("Failed to initialize auth config.")
+        
+        UserSession.SECURE_COOKIE = secure_cookie
+
     def get(self):
         sessionState, session = RequestPreCheck.getSession()
         if not sessionState:
@@ -22,12 +34,14 @@ class UserSession(Resource):
         dataState, data = RequestPreCheck.checkData({
             'username': str,
             'password': str,
+            'remember': bool
         })
         if not dataState:
             return data
         
         username = data.get_str('username')
         password = data.get_str('password')
+        remember = data.get_bool('remember')
         if username == '' or password == '':
             return APIConstants.soft_end('No credentials provided.')
         
@@ -36,28 +50,47 @@ class UserSession(Resource):
             return APIConstants.soft_end('Password incorrect or no user found.')
         userId = user.get_int('id')
 
-        if UserData.validatePassword(password, userId):
-            sessionID = SessionData.createSession(userId, 'userid', 90 * 86400)
-            return {'status': 'success', 'sessionId': SessionData.AES.encrypt(sessionID), 'userId': userId}
-        else:
+        if not UserData.validatePassword(password, userId):
             return APIConstants.soft_end('Password incorrect or no user found.')
+        
+        sessionAuth = SessionData.createSession(userId, 'userid', (90 * 86400) if remember else 86400)
+        encryptedAuth = SessionData.AES.encrypt(sessionAuth)
+        
+        payload = {'status': 'success', 'userId': userId}
+        resp = make_response(payload)
+        resp.set_cookie(
+            "User-Auth-Key",
+            encryptedAuth,
+            (90 * 86400) if remember else 86400,
+            httponly=True,
+            samesite="Strict",
+            secure=self.SECURE_COOKIE
+        )
+
+        return resp
     
     def delete(self):
         '''
         Given a user's session id, delete it from the db.
-        '''
-        dataState, data = RequestPreCheck.checkData()
-        if not dataState:
-            return data
-        
-        session_id = data.get_str('sessionId')
-        if session_id != '':
+        '''        
+        session_id = request.cookies.get('User-Auth-Key')
+        if session_id:
             decryptedSession = SessionData.AES.decrypt(session_id)
             if not decryptedSession:
-                return APIConstants.bad_end('Unable to decrypt SessionId!')
+                return APIConstants.bad_end('Unable to decrypt User-Auth-Key!')
 
             SessionData.deleteSession(decryptedSession)
-        return {'status': 'success'}
+        
+        resp = make_response({'status': 'success'})
+        resp.set_cookie(
+            'User-Auth-Key',
+            '',
+            expires=0, # immediately expire
+            httponly=True,
+            samesite="Strict",
+            secure=self.SECURE_COOKIE
+        )
+        return resp
     
 class emailAuth(Resource):
     def post(self):

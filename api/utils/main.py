@@ -41,7 +41,12 @@ from api.services.apr.network import APRSearchMaster
 from api.services.apr.user import APRPlayer, APRNewPlayer, APRLinkAccount, APRInvited, APRPresentList
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, supports_credentials=True)
+app.config.update(
+    SESSION_COOKIE_HTTPONLY = True,
+    SESSION_COOKIE_SAMESITE = 'None',
+)
+
 api = Api(app)
 config: Dict[str, Any] = {}
 
@@ -156,7 +161,16 @@ def loadConfigs(filename: str) -> None:
     with open(filename, 'r') as file:
         config.update(yaml.safe_load(file))
 
-    config_map = {
+    flaskConfig = config.get('flask', {})
+    secretKey = flaskConfig.get('secret_key')
+    if not secretKey:
+        raise ValueError("Missing 'flask.secret_key' in config file. Required for secure HTTP-only cookies.")
+    app.secret_key = secretKey
+    app.config.update(
+        SESSION_COOKIE_SECURE = flaskConfig.get('secure_cookie', True),
+    )
+
+    configMap = {
         'database': MySQLBase.updateConfig,
         'cache': LocalCache.updateConfig,
         'crypto': SessionData.updateConfig,
@@ -165,9 +179,10 @@ def loadConfigs(filename: str) -> None:
         'backblaze': BackBlazeCDN.updateConfig,
         'share': ShareServer.updateConfig,
         'bad-maniac': BadManiac.updateConfig,
+        'flask': UserSession.updateConfig,
     }
 
-    for key, updater in config_map.items():
+    for key, updater in configMap.items():
         section = config.get(key, {})
         if section:
             updater(section)

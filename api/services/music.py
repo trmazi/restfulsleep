@@ -1,11 +1,16 @@
 from flask_restful import Resource
 from flask import request
 from api.data.endpoints.music import MusicData
+from api.precheck import RequestPreCheck
 
 from api.constants import APIConstants
 
 class Music(Resource):
     def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         game = request.args.get('game')
         version = request.args.get('version')
         songIds = request.headers.get('songIds')

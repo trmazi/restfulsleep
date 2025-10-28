@@ -17,6 +17,7 @@ class SessionData:
         
         SessionData.AES = AESCipher(key)
 
+    @staticmethod
     def createSession(opId: int, opType: str, expiration: int=(30 * 86400)) -> str:
         session_token = ''.join(random.choice('0123456789ABCDEF') for _ in range(32))
         expiration_time = int(time.time() + expiration)
@@ -30,7 +31,8 @@ class SessionData:
             session.commit()
 
             return session_token
-        
+    
+    @staticmethod
     def checkSession(sessionID: str) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
             userSession = session.query(Session).filter(Session.session == sessionID, Session.type == 'userid').first()
@@ -44,7 +46,8 @@ class SessionData:
                     'active': False,
                     'id': None 
                 })
-            
+        
+    @staticmethod
     def getAllSessions(userId: int) -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             userSessions = session.query(Session).filter(Session.id == userId, Session.type == 'userid').all()
@@ -54,11 +57,13 @@ class SessionData:
                     'id': int(session.id)
                 }) for session in userSessions]
         
+    @staticmethod
     def deleteSession(sessionID: str) -> None:
         with MySQLBase.SessionLocal() as session:
             session.query(Session).filter(Session.session == sessionID, Session.type == 'userid').delete()
             session.commit()
 
+    @staticmethod
     def deleteAllSessions(userId: int) -> None:
         with MySQLBase.SessionLocal() as session:
             userSessions = session.query(Session).filter(Session.id == userId, Session.type == 'userid').all()
@@ -67,6 +72,7 @@ class SessionData:
             session.commit()
 
 class KeyData:
+    @staticmethod
     def createKey(opId: int, opType: str, expiration: int=(300)) -> str:
         key_token = ''.join(random.choice('123456789') for _ in range(6))
         expiration_time = int(time.time() + expiration)
@@ -80,7 +86,8 @@ class KeyData:
             session.commit()
 
             return key_token
-        
+    
+    @staticmethod
     def checkKey(key: int, opType: str) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
             userSession = session.query(Session).filter(Session.session == key, Session.type == opType).first()
@@ -94,7 +101,8 @@ class KeyData:
                     'active': False,
                     'id': None 
                 })
-        
+    
+    @staticmethod
     def deleteKey(key: str, opType: str) -> None:
         with MySQLBase.SessionLocal() as session:
             session.query(Session).filter(Session.session == key, Session.type == opType).delete()

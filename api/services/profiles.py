@@ -21,6 +21,10 @@ class allPlayers(Resource):
         return profile
 
     def get(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         argsState, args = RequestPreCheck.checkArgs({
             'version': str
         })
@@ -66,6 +70,10 @@ class allPlayers(Resource):
 
 class Profile(Resource):
     def get(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         version = request.args.get('version')
         userId = request.args.get('userId')
 
@@ -128,6 +136,10 @@ class Profile(Resource):
     
 class Achievements(Resource):
     def get(self, game: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
         args = ValidatedDict(request.args)
 
         version = int(args.get_str('version'))
@@ -178,7 +190,13 @@ class Links(Resource):
         if not sessionState:
             return session
         
-        args = ValidatedDict(request.args)
+        argsState, args = RequestPreCheck.checkArgs({
+            'version': str,
+            'userId': str,
+        })
+        if not argsState:
+            return args
+        
         version = int(args.get_str('version'))
         userId = int(args.get_str('userId'))
 
