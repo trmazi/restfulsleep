@@ -16,9 +16,9 @@ class NewsData:
                 'data': JsonEncoded.deserialize(data.data),
             }
         
-    def getAllNews() -> list[dict]:
+    def getAllNews(limit: int) -> list[dict]:
         with MySQLBase.SessionLocal() as session:
-            data = session.query(News).order_by(News.timestamp.desc()).limit(3).all()
+            data = session.query(News).order_by(News.timestamp.desc()).limit(limit).all()
             if not data:
                 return None
             
