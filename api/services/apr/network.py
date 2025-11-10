@@ -2,26 +2,25 @@ from flask_restful import Resource
 
 class APRSearchMaster(Resource):
     def get(self):
-        response = {
-            'GameCenterList': [
+        return {
+            "Version": "2.0.0",
+            "Info": "https://i.redd.it/iqd154wkuy441.jpg",
+            "Mark": [
                 {
-                    'ID': 0,
-                    'Lat': 39.908987,
-                    'Long': -86.065242,
-                    'Name': 'Boss Battle Games',
-                    'Open': '1',
-                    'Model': [1]
+                    "Order": "0",
+                    "Model": "TUNE STREET",
+                    "Name": "Boss Battle Games",
+                    "Image": "https://i.redd.it/iqd154wkuy441.jpg"
                 }
             ],
-            'Version': '2.0.0',
-            'Info': 'Da Map.',
-            'Mark': [
+            "GameCenterList": [
                 {
-                   'Order': '0',
-                   'Model': '0',
-                   'Name': 'Boss Battle Games',
-                   'Image': 'https://shorturl.at/emruW'
+                    "ID": 1,
+                    "Lat": 39.9089,
+                    "Long": -86.0652,
+                    "Name": "Boss Battle Games",
+                    "Open": "10:00-22:00",
+                    "Model": ["1"]
                 }
             ]
         }
-        return response

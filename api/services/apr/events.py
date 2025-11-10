@@ -4,7 +4,14 @@ from api.services.apr.lists import DataLists
 
 class APREventInfo(Resource):
     def post(self):
-        return {'GamePlay': []}
+        return {
+            "Treasure": [
+                {"EventId": 1},
+            ],
+            "GamePlay": [
+                # {"EventId": 1},
+            ],
+        }
 
 class APRFileList(Resource):
     '''
@@ -14,5 +21,16 @@ class APRFileList(Resource):
         request = RequestData.get_request_data()
         if request['client_ver'] != '200':
             return {'ErrorCode': '4'}
+        
+        fileList = []
 
-        return {'List': DataLists.stockList}
+        for index, file in enumerate(DataLists.bootList + DataLists.stockList):
+            fileList.append(
+                {
+                    "Id": index,
+                    "Url": file.get("Url", ""),
+                    "Size": file.get("Size", 0)
+                }
+            )
+
+        return {'List': fileList} # + DataLists.stockList}

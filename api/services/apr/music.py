@@ -47,8 +47,29 @@ class APRPackList(Resource):
         #             })
         #             index += 1
 
+        filelist = [
+            {
+            "packID": 1,
+            "packName": "Starter Pack A",
+            "price": 0,
+            "items": ["song001", "song002", "song003"]
+            },
+            {
+            "packID": 2,
+            "packName": "Premium Pack B",
+            "price": 500,
+            "items": ["song010", "song011"]
+            }
+        ]
+    
+
+        # Optional promotions (same schema)
+        promotion_list = [
+            {"ID": 1},
+        ]
+
         return {
-            'Version': '2.0.0',
-            'PackList': filelist,
-            'Promotion': []
+            "Version": "2.0.0",
+            "PackList": filelist,
+            "Promotion": promotion_list
         }

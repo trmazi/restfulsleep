@@ -38,7 +38,7 @@ from api.services.apr.events import APREventInfo, APRFileList
 from api.services.apr.session import APRNewSession, APRSaveSession
 from api.services.apr.music import APRRecommendList, APRPackList
 from api.services.apr.network import APRSearchMaster
-from api.services.apr.user import APRPlayer, APRNewPlayer, APRLinkAccount, APRInvited, APRPresentList
+from api.services.apr.user import APRPlayer, APRNewPlayer, APRLinkAccount, APRInvited, APRPresentList, APRGetFriendList
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -151,6 +151,7 @@ api.add_resource(APRNewPlayer, f'/apr/main/cgi/new_player/index.jsp')
 api.add_resource(APRLinkAccount, f'/apr/main/cgi/link_kid/index.jsp')
 api.add_resource(APRInvited, f'/apr/main/cgi/invited/index.jsp')
 api.add_resource(APRPresentList, f'/apr/main/cgi/get_present_list/index.jsp')
+api.add_resource(APRGetFriendList, f'/apr/main/cgi/get_friend_list/index.jsp')
 api.add_resource(APRRecommendList, f'/apr/main/cgi/get_recommend_list/index.jsp')
 api.add_resource(APRPackList, f'/apr/main/cgi/packlist/index.jsp')
 api.add_resource(APRSearchMaster, f'/apr/main/cgi/search_master/index.jsp')
