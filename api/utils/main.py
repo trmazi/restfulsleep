@@ -1,8 +1,9 @@
-from flask import Flask
+from flask import Flask, Response, jsonify
 from flask_cors import CORS # type: ignore
 from flask_restful import Api, Resource
 from typing import Any, Dict
 import argparse
+import plistlib
 import yaml
 
 # External APIs
@@ -39,6 +40,11 @@ from api.services.apr.session import APRNewSession, APRSaveSession
 from api.services.apr.music import APRRecommendList, APRPackList
 from api.services.apr.network import APRSearchMaster
 from api.services.apr.user import APRPlayer, APRNewPlayer, APRLinkAccount, APRInvited, APRPresentList, APRGetFriendList
+
+# jubeat PLUS server
+from api.services.agx.cgi import AGXStartup, AGXCheckMarker, AGXNew, AGXPolicyStore
+from api.services.aqq.lab import AQQGetLabURL
+from api.services.aqq.ios import AQQLabiOS
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -155,6 +161,31 @@ api.add_resource(APRGetFriendList, f'/apr/main/cgi/get_friend_list/index.jsp')
 api.add_resource(APRRecommendList, f'/apr/main/cgi/get_recommend_list/index.jsp')
 api.add_resource(APRPackList, f'/apr/main/cgi/packlist/index.jsp')
 api.add_resource(APRSearchMaster, f'/apr/main/cgi/search_master/index.jsp')
+
+# jubeat PLUS API
+@app.route('/agx/main/cgi/check_marker/')
+def marker_list():
+    base_url = "https://jb-ios.ez4dj.com/markers"   # <-- change to your actual URL
+
+    markerData = []
+    for i in range(1, 17):
+        marker_id = f"tm{i:04d}"  # tm0001 → tm0035
+        item_url = f"{base_url}/{marker_id}.zip"  # or .dat, .zip, whatever your game expects
+
+        markerData.append({
+            "ID": marker_id,
+            "Version": "3.7.0",
+            "ItemURL": item_url
+        })
+
+    return jsonify(markerData)
+
+api.add_resource(AGXStartup, '/agx/main/cgi/startup/')
+# api.add_resource(AGXCheckMarker, '/agx/main/cgi/check_marker/')
+api.add_resource(AGXNew, '/agx/main/cgi/new/')
+api.add_resource(AGXPolicyStore, '/agx/main/cgi/policy/store/')
+api.add_resource(AQQGetLabURL, '/aqq/api/JP/v1/utils/getLabURL')
+api.add_resource(AQQLabiOS, '/aqq/api/ios')
 
 def loadConfigs(filename: str) -> None:
     global config

@@ -37,6 +37,8 @@ setup(
         'api.data.endpoints',
         'api.services',
         'api.services.apr',
+        'api.services.agx',
+        'api.services.aqq',
 
         # External communications
         'api.external',
