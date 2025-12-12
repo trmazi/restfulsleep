@@ -53,4 +53,8 @@ bad-maniac:
     endpoint: 
     auth-key: 
 
+agx-server:
+    marker-url: ''
+    magic-key: ''
+
 record_cache_dir: '/tmp'
