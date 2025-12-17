@@ -1,8 +1,10 @@
+from typing import List, Tuple, Optional
+from sqlalchemy import func
 from api.data.mysql import MySQLBase
-from api.data.types import Music
+from api.data.types import Music, Attempt
 from api.data.json import JsonEncoded
 from api.data.cache import LocalCache
-from sqlalchemy import func, and_
+from api.data.time import Time
 
 class MusicData:
     @staticmethod
@@ -143,3 +145,45 @@ class MusicData:
             groupedSongs[song.songid]['charts'].append(chartData)
 
         return list(groupedSongs.values())[0] if len(groupedSongs) == 1 else list(groupedSongs.values())
+    
+    @staticmethod
+    def getHitChart(
+        game: str,
+        version: int,
+        count: int,
+        days: Optional[int] = None,
+        lid: Optional[int] = None,
+    ) -> List[Tuple[int, int]]:
+        """
+        Look up a game's most played songs.
+        Returns: [(songid, plays), ...]
+        """
+        with MySQLBase.SessionLocal() as session:
+            query = (
+                session.query(
+                    Music.songid.label("songid"),
+                    func.count(Attempt.timestamp).label("plays"),
+                )
+                .join(Attempt, Attempt.musicid == Music.id)
+                .filter(
+                    Music.game == game,
+                    Music.version == version,
+                )
+            )
+
+            if days is not None:
+                timestamp = Time.now() - (Time.SECONDS_IN_DAY * days)
+                query = query.filter(Attempt.timestamp > timestamp)
+
+            if lid is not None:
+                query = query.filter(Attempt.lid == lid)
+
+            results = (
+                query
+                .group_by(Music.songid)
+                .order_by(func.count(Attempt.timestamp).desc())
+                .limit(count)
+                .all()
+            )
+
+        return [(row.songid, row.plays) for row in results]

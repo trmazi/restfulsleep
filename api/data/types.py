@@ -187,6 +187,15 @@ class Session(Base):
     type = Column(String(255))
     expiration = Column(Integer)
 
+class TimeSensitiveSettings(Base):
+    __tablename__ = 'time_sensitive_settings'
+    game = Column(String(255), primary_key=True, nullable=False)
+    version = Column(Integer, primary_key=True, nullable=False)
+    name = Column(String(255), primary_key=True, nullable=False)
+    start_time = Column(Integer, primary_key=True, nullable=False)
+    end_time = Column(Integer, nullable=False)
+    data = Column(LargeBinary, nullable=False)
+
 class User(Base):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)

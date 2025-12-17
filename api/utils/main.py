@@ -24,7 +24,8 @@ from api.services.arcade import Arcade, ArcadeSettings, Paseli, VPN, CheckArcade
 from api.services.news import getAllNews, getNews
 from api.services.auth import UserSession, emailAuth, check2FAKey, resetPassword
 from api.services.user import UserAccount, UserUpdatePassword, UserCard, UserTakeover, UserPlayVideos, UserContent, UserCustomize, UserAppVersion, UserReadNews, UserSessions
-from api.services.profiles import allPlayers, Profile, Achievements, Links, Link
+from api.services.profiles import Profile, Achievements, Links, Link
+from api.services.game import Game
 from api.services.music import Music
 from api.services.score import Attempts, Records, TopScore
 
@@ -121,7 +122,7 @@ api.add_resource(IntegrateDiscord, '/v1/user/integrate/discord')
 api.add_resource(IntegrateTachi, '/v1/user/integrate/tachi')
 
 # Game Data
-api.add_resource(allPlayers, '/v1/game/<game>/profiles')
+api.add_resource(Game, '/v1/game/<game>')
 api.add_resource(Profile, '/v1/profile/<game>')
 api.add_resource(Achievements, '/v1/profile/<game>/achievements')
 api.add_resource(Links, '/v1/profile/<game>/links')
