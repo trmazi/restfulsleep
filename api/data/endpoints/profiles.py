@@ -1,9 +1,8 @@
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from sqlalchemy import func, and_
 from api.data.mysql import MySQLBase
-from api.data.types import Profile, Refid
+from api.data.types import Profile, Refid, User
 from api.data.json import JsonEncoded
-from typing import Dict, Any, Set, List
+from typing import Dict, Any, List
 from api.data.data import BaseData
 from api.constants import ValidatedDict
 
@@ -19,10 +18,12 @@ class ProfileData:
                         Refid.version,
                         Profile.data
                     )
+                    .join(User, User.id == Refid.userId)
                     .join(Profile, Refid.refid == Profile.refid)
                     .filter(
                         Refid.game == game,
-                        Refid.version == version
+                        Refid.version == version,
+                        User.banned.is_(False),
                     )
                     .yield_per(1000)
                 )
@@ -33,9 +34,11 @@ class ProfileData:
                         Refid.userId,
                         func.max(Refid.version).label("max_version"),
                     )
+                    .join(User, User.id == Refid.userId)
                     .filter(
                         Refid.game == game,
-                        Refid.version < 10000
+                        Refid.version < 10000,
+                        User.banned.is_(False),
                     )
                     .group_by(Refid.userId)
                 ).subquery()

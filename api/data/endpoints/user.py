@@ -16,6 +16,15 @@ class UserData:
                 return pbkdf2_sha512.verify(plain_password, pw_hash[0])
             except (ValueError, TypeError):
                 return False
+            
+    def banned(userId: int) -> ValidatedDict:
+        with MySQLBase.SessionLocal() as session:
+            userBanned = session.query(User.banned).filter(User.id == userId).first()
+
+            if userBanned is not None and userBanned[0]:
+                return True
+            else:
+                return False
 
     def getUser(userId: int) -> ValidatedDict:
         with MySQLBase.SessionLocal() as session:
