@@ -23,36 +23,46 @@ class Game(Resource):
             return session
         
         argsState, args = RequestPreCheck.checkArgs({
-            'version': str
+            'version': str,
+            'noUsers': str
         })
         if argsState:
             try:
                 version = int(args.get_str('version'))
             except:
                 version = None
+
+            try:
+                noUsers = (args.get_str('noUsers').lowercase() == 'true')
+            except:
+                noUsers = False
         
         cacheName = f'juiced_profiles_{game}'
-        profileData = LocalCache().getCachedData(cacheName)
 
-        if not profileData:
-            profileData = []
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                thread_profiles = executor.submit(ProfileData.getAllProfiles, game)
-                thread_extids = executor.submit(GameData.getAllExtid, game)
-                thread_stats = executor.submit(GameData.getAllGameStats, game)
+        profileData = None
+        if not noUsers:
+            if version == None:
+                profileData = LocalCache().getCachedData(cacheName)
 
-                profiles = thread_profiles.result()
-                extIds = {extid[0]: extid[1] for extid in thread_extids.result()}
-                stats = {stat[0]: stat[1] for stat in thread_stats.result()}
+            if not profileData:
+                profileData = []
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    thread_profiles = executor.submit(ProfileData.getAllProfiles, game, version)
+                    thread_extids = executor.submit(GameData.getAllExtid, game)
+                    thread_stats = executor.submit(GameData.getAllGameStats, game)
 
-            with concurrent.futures.ThreadPoolExecutor() as executor:
-                futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
-                for future in concurrent.futures.as_completed(futures):
-                    result = future.result()
-                    if result is not None:
-                        profileData.append(result)
+                    profiles = thread_profiles.result()
+                    extIds = {extid[0]: extid[1] for extid in thread_extids.result()}
+                    stats = {stat[0]: stat[1] for stat in thread_stats.result()}
 
-            LocalCache().putCachedData(cacheName, profileData)
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    futures = {executor.submit(self.process_profile, profile, extIds, stats): profile for profile in profiles}
+                    for future in concurrent.futures.as_completed(futures):
+                        result = future.result()
+                        if result is not None:
+                            profileData.append(result)
+                if version == None:
+                    LocalCache().putCachedData(cacheName, profileData)
 
         scheduledEventData = GameData.getTimeSensitiveSettings(game, version)
         baseHitChart = MusicData.getHitChart(game, version, 10)

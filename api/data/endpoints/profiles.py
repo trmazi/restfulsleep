@@ -18,12 +18,15 @@ class ProfileData:
                         Refid.version,
                         Profile.data
                     )
-                    .join(User, User.id == Refid.userId)
+                    .outerjoin(User, and_(
+                      Refid.userId == User.id, 
+                      User.banned.is_(True)
+                    ))
                     .join(Profile, Refid.refid == Profile.refid)
                     .filter(
                         Refid.game == game,
                         Refid.version == version,
-                        User.banned.is_(False),
+                        User.id.is_(None),
                     )
                     .yield_per(1000)
                 )
@@ -34,11 +37,14 @@ class ProfileData:
                         Refid.userId,
                         func.max(Refid.version).label("max_version"),
                     )
-                    .join(User, User.id == Refid.userId)
+                    .outerjoin(User, and_(
+                      Refid.userId == User.id, 
+                      User.banned.is_(True)
+                    ))
                     .filter(
                         Refid.game == game,
                         Refid.version < 10000,
-                        User.banned.is_(False),
+                        User.id.is_(None),
                     )
                     .group_by(Refid.userId)
                 ).subquery()
