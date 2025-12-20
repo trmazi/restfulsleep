@@ -56,7 +56,6 @@ class ScoreData:
                     record = bestScoresByDBId.get(chart['db_id'])
                     if not record:
                         continue
-
                     recordUser = ProfileData.getProfile(game, None, record.userid, True)
                     if recordUser == None:
                         continue

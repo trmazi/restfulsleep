@@ -159,10 +159,12 @@ class MusicData:
         Returns: [(songid, plays), ...]
         """
         with MySQLBase.SessionLocal() as session:
+            plays = func.count().label("plays")
+
             query = (
                 session.query(
                     Music.songid.label("songid"),
-                    func.count(Attempt.timestamp).label("plays"),
+                    plays,
                 )
                 .join(Attempt, Attempt.musicid == Music.id)
                 .filter(
@@ -181,7 +183,7 @@ class MusicData:
             results = (
                 query
                 .group_by(Music.songid)
-                .order_by(func.count(Attempt.timestamp).desc())
+                .order_by(plays.desc())
                 .limit(count)
                 .all()
             )

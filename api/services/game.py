@@ -64,8 +64,12 @@ class Game(Resource):
                 if version == None:
                     LocalCache().putCachedData(cacheName, profileData)
 
-        scheduledEventData = GameData.getTimeSensitiveSettings(game, version)
-        baseHitChart = MusicData.getHitChart(game, version, 10)
+        if version: 
+            scheduledEventData = GameData.getTimeSensitiveSettings(game, version)
+            baseHitChart = MusicData.getHitChart(game, version, 10)
+        else:
+            scheduledEventData = []
+            baseHitChart = []
 
         return {
             'status': 'success',
