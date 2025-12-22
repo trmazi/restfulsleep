@@ -1,8 +1,9 @@
 class BaseData():
+    BAD_KEYS = ["usergamedata", "beta", "userId", "stats", "is_beta", "admin", "beta", "hitChart"]
     @classmethod
     def update_data(cls, existing_data, new_data):
         for key, value in new_data.items():
-            if key in ["usergamedata", "beta", "userId", "stats", "is_beta", "admin", "beta"]:
+            if key in BaseData.BAD_KEYS:
                 continue
 
             if value is None:
@@ -10,7 +11,7 @@ class BaseData():
                 if key in existing_data:
                     del existing_data[key]
             elif isinstance(value, dict):
-                if key in ["usergamedata", "beta", "userId", "stats", "is_beta", "admin", "beta"]:
+                if key in BaseData.BAD_KEYS:
                     continue
                 
                 if key not in existing_data:

@@ -7,6 +7,7 @@ from api.data.endpoints.user import UserData
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.achievements import AchievementData
 from api.data.endpoints.game import GameData
+from api.data.endpoints.music import MusicData
 from api.data.endpoints.links import LinkData
 
 class Profile(Resource):
@@ -25,17 +26,22 @@ class Profile(Resource):
         if not version or version == 'null' and versions:
             version = versions[-1] if len(versions) > 1 else versions[0]
 
+        payload = ValidatedDict()
+
         profile = ProfileData.getProfile(game, version, userId)
         if not profile:
             return APIConstants.soft_end('No profile found!')
-        
-        profile['versions'] = versions
-        profile['stats'] = GameData.getUserGameStats(game, userId)
+
+
         profile['extid'] = GameData.getUserExtid(game, userId)
+        payload['profile'] = profile
+        payload['versions'] = versions
+        payload['stats'] = GameData.getUserGameStats(game, userId)
+        payload['hitChart'] = MusicData.getHitChart(game, version, 10, None, None, userId)
 
         return {
             'status': 'success',
-            'data': profile
+            'data': payload
         }, 200
     
     def post(self, game: str):

@@ -153,6 +153,7 @@ class MusicData:
         count: int,
         days: Optional[int] = None,
         lid: Optional[int] = None,
+        userId: Optional[int] = None,
     ) -> List[Tuple[int, int]]:
         """
         Look up a game's most played songs.
@@ -179,6 +180,9 @@ class MusicData:
 
             if lid is not None:
                 query = query.filter(Attempt.lid == lid)
+
+            if userId is not None:
+                query = query.filter(Attempt.userid == userId)
 
             results = (
                 query
