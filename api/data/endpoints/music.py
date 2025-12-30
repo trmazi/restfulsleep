@@ -1,10 +1,25 @@
 from typing import List, Tuple, Optional
-from sqlalchemy import func
+from sqlalchemy import func, and_
 from api.data.mysql import MySQLBase
 from api.data.types import Music, Attempt
 from api.data.json import JsonEncoded
 from api.data.cache import LocalCache
 from api.data.time import Time
+
+def _latest_version_subquery(session, game, song_ids=None):
+    q = (
+        session.query(
+            Music.songid,
+            func.max(Music.version).label("max_version")
+        )
+        .filter(Music.game == game)
+        .group_by(Music.songid)
+    )
+
+    if song_ids:
+        q = q.filter(Music.songid.in_(song_ids))
+
+    return q.subquery()
 
 class MusicData:
     @staticmethod
@@ -107,16 +122,29 @@ class MusicData:
     @staticmethod
     def getSongByGameId(game: str, songId: int, version: int = None, chart: int = None) -> list[dict]:
         with MySQLBase.SessionLocal() as session:
-            musicQuery = (
-                session.query(Music)
-                .filter(Music.game == game, Music.songid == songId, Music.chart == chart if chart else True)
-                .order_by(Music.songid.desc())
-            )
+            with MySQLBase.SessionLocal() as session:
+                musicQuery = (
+                    session.query(Music)
+                    .filter(Music.game == game, Music.songid == songId)
+                )
 
-            if version is not None:
-                musicQuery = musicQuery.filter(Music.version == version)
+                if chart is not None:
+                    musicQuery = musicQuery.filter(Music.chart == chart)
 
-            result = musicQuery.all()
+                if version is not None:
+                    musicQuery = musicQuery.filter(Music.version == version)
+                else:
+                    latest = (
+                        session.query(
+                            func.max(Music.version).label("max_version")
+                        )
+                        .filter(Music.game == game, Music.songid == songId)
+                        .scalar_subquery()
+                    )
+
+                    musicQuery = musicQuery.filter(Music.version == latest)
+
+                result = musicQuery.order_by(Music.chart.asc()).all()
 
         seen = set()
         groupedSongs = {}
