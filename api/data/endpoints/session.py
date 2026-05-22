@@ -157,3 +157,52 @@ class TokenData:
         with MySQLBase.SessionLocal() as session:
             session.query(Session).filter(Session.session == token, Session.type == opType).delete()
             session.commit()
+            
+class SPPassData:    
+    @staticmethod
+    def checkToken(token: str) -> ValidatedDict:
+        with MySQLBase.SessionLocal() as session:
+            spSession = session.query(Session).filter(Session.session == token, Session.type == "sppass").first()
+            if spSession != None:
+                return ValidatedDict({
+                    'active': True,
+                    'id': int(spSession.id)
+                })
+            else:
+                return ValidatedDict({
+                    'active': False,
+                    'id': None 
+                })
+
+    @staticmethod
+    def approveToken(token: str, userId: int) -> str | None:
+        with MySQLBase.SessionLocal() as session:
+            try:
+                spSession = session.query(Session).filter(
+                    Session.session == token,
+                    Session.type == "sppass"
+                ).first()
+
+                if spSession is None:
+                    return None
+
+                session.delete(spSession)
+                session.commit()
+                
+                expirationTime = int(time.time() + 90)
+                approvedSession = Session(
+                    id=userId,
+                    session=token,
+                    type="sppass_approved",
+                    expiration=expirationTime
+                )
+
+                session.add(approvedSession)
+                session.commit()
+
+                return token
+
+            except Exception as e:
+                print(e)
+                session.rollback()
+                return None

@@ -4,8 +4,9 @@ from flask_restful import Resource
 from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
-from api.data.endpoints.session import SessionData 
+from api.data.endpoints.session import SessionData, SPPassData
 from api.data.endpoints.arcade import ArcadeData
+from api.data.endpoints.machine import MachineData
 from api.data.endpoints.user import UserData
 from api.data.endpoints.profiles import ProfileData
 from api.data.endpoints.game import GameData
@@ -841,3 +842,40 @@ class UserMinified(Resource):
             }
         }
     
+class UserContactless(Resource):
+    def get(self, token: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+
+        tokenData = SPPassData.checkToken(token)
+        if not tokenData.get_bool('active'):
+            return APIConstants.badEnd('This token is expired or invalid!')
+        
+        machine = MachineData.getMachine(tokenData.get_int('id'))
+        if machine == None:
+            return APIConstants.badEnd('Failed to find machine!')
+        
+        arcade = ArcadeData.getArcade(machine.get_int('arcadeId'))
+        if arcade == None:
+            return APIConstants.badEnd('Failed to find arcade!')
+        
+        return APIConstants.goodEnd({
+            'active': True,
+            'arcade': arcade.get_str('name')
+        })
+    
+    def post(self, token: str):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+
+        tokenData = SPPassData.checkToken(token)
+        if not tokenData.get_bool('active'):
+            return APIConstants.badEnd('This token is expired or invalid!')
+        
+        SPPassData.approveToken(token, session.get_int('id'))
+        
+        return APIConstants.goodEnd({
+            'approved': True,
+        })

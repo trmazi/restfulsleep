@@ -5,7 +5,26 @@ from api.data.types import Machine
 
 from sqlalchemy import text
 
-class MachineData:   
+class MachineData:
+    def getMachine(machineId: int) -> ValidatedDict | None:
+        with MySQLBase.SessionLocal() as session:
+            machine = session.query(Machine).filter(Machine.id == machineId).first()
+            if machine is None:
+                return None
+            else:
+                return ValidatedDict({
+                    'id': int(machine.id),
+                    'PCBID': machine.pcbid,
+                    'name': machine.description,
+                    'arcadeId': int(machine.arcadeid),
+                    'port': str(machine.port),
+                    'game': machine.game if machine.game else None,
+                    'version': int(machine.version) if machine.version else None,
+                    'ota': bool(machine.updaton),
+                    'cabinet': False,
+                    'data': JsonEncoded.deserialize(machine.data)
+                })
+
     def getArcadeMachines(arcadeId: int) -> list[ValidatedDict]:
         with MySQLBase.SessionLocal() as session:
             machines = session.query(Machine).filter(Machine.arcadeid == arcadeId).all()
