@@ -16,7 +16,6 @@ crypto:
 
 pfsense:
     server: 
-    client-id: 
     client-key: 
 
 email:

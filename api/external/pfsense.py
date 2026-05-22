@@ -1,11 +1,9 @@
 import string
 import requests
 import json
-import base64
 
 class PFSense:
     server = None
-    client_id = None
     client_key = None
 
     default_file = (
@@ -29,7 +27,6 @@ class PFSense:
     @staticmethod
     def updateConfig(pf_config: dict) -> None: 
         PFSense.server = pf_config.get('server')
-        PFSense.client_id = pf_config.get('client-id')
         PFSense.client_key = pf_config.get('client-key')
 
     @staticmethod
@@ -41,9 +38,9 @@ class PFSense:
     
     @staticmethod
     def create_config_file(cert, cert_auth):
-        ca_cert = base64.b64decode(cert_auth.get('crt')).decode('utf-8')
-        cli_cert = base64.b64decode(cert.get('crt')).decode('utf-8')
-        key = base64.b64decode(cert.get('prv')).decode('utf-8')
+        ca_cert = cert_auth.get('crt')
+        cli_cert = cert.get('crt')
+        key = cert.get('prv')
 
         text = PFSense.default_file + (
             '\n\n'+
@@ -60,7 +57,7 @@ class PFSense:
             return None
 
         headers = {
-            'Authorization': f'{PFSense.client_id} {PFSense.client_key}',
+            'X-API-Key': PFSense.client_key,
             'Content-Type': 'application/json'
         }
         arcade['name'] = PFSense.format_name(arcade['name'])
@@ -68,7 +65,7 @@ class PFSense:
         def get_ca():
             try:
                 response = requests.get(
-                    f'{PFSense.server}/system/ca',
+                    f'{PFSense.server}/system/certificate_authorities',
                     headers=headers,
                     verify=False,
                     timeout=10
@@ -106,7 +103,7 @@ class PFSense:
 
             try:
                 response = requests.post(
-                    f'{PFSense.server}/system/certificate',
+                    f'{PFSense.server}/system/certificate/generate',
                     headers=headers,
                     data=json.dumps(certificate_data),
                     verify=False,
@@ -120,10 +117,10 @@ class PFSense:
             except requests.exceptions.RequestException as exception:
                 print('An error occurred while making the request:', exception)
 
-        def get_cert():
+        def get_certs():
             try:
                 response = requests.get(
-                    f'{PFSense.server}/system/certificate',
+                    f'{PFSense.server}/system/certificates',
                     headers=headers,
                     verify=False,
                     timeout=10
@@ -141,14 +138,14 @@ class PFSense:
             except requests.exceptions.RequestException as exception:
                 print('An error occurred while making the request:', exception)
                 return None, False
-
+            
         ca = get_ca()
         if ca:
-            (cert, already_exist) = get_cert()
+            (cert, already_exist) = get_certs()
             if not already_exist:
                 cert = create_cert(ca)
 
-            results = PFSense.create_config_file(cert, get_ca())
+            results = PFSense.create_config_file(cert, ca)
             generator = (cell for row in results
                             for cell in row)
             name = arcade['name'].replace(' ', '_')
