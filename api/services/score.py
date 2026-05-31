@@ -18,8 +18,16 @@ class Records(Resource):
                 userId = int(args.get_str('userId', None))
             except:
                 pass
+
+        songIds = None
+        if argsState:
+            try:
+                songId = int(args.get_str('songId', None))
+                songIds = [songId]
+            except:
+                pass
         
-        data = ScoreData.getAllRecords(game, userId)
+        data = ScoreData.getAllRecords(game, userId, songIds=songIds)
         return {
             'status': 'success',
             'data': data

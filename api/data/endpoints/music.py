@@ -112,7 +112,7 @@ class MusicData:
 
                 groupedSongs[song.songid]['charts'].append(chartData)
 
-            resultData = list(groupedSongs.values())[0] if len(groupedSongs) == 1 else list(groupedSongs.values())
+            resultData = list(groupedSongs.values())
 
             if not song_ids:
                 LocalCache().putCachedData(cacheName, resultData)

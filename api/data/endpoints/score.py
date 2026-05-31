@@ -12,8 +12,8 @@ from api.data.endpoints.profiles import ProfileData
 
 class ScoreData:
     @staticmethod
-    def getAllRecords(game: str = None, userId: int = None, machineId: int = None) -> dict:
-        musicData = MusicData.getAllSongs(game)
+    def getAllRecords(game: str = None, userId: int = None, machineId: int = None, songIds: List[int] = None) -> dict:
+        musicData = MusicData.getAllSongs(game, song_ids=songIds)
         allDBId = [chart['db_id'] for song in musicData for chart in song.get('charts', [])]
         if not allDBId:
             return None
