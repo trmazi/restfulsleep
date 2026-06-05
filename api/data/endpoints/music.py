@@ -76,7 +76,7 @@ class MusicData:
                 musicQuery = (
                     session.query(Music)
                     .filter(Music.game == game, Music.songid.in_(song_ids) if song_ids else True)
-                    .order_by(Music.songid.desc(), Music.version.asc())
+                    .order_by(Music.songid.desc(), Music.version.desc())
                 )
 
                 if version is not None:
