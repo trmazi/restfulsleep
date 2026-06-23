@@ -3,7 +3,7 @@ from flask import request
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
-from api.data.endpoints.arcade import ArcadeData
+from api.data.endpoints import ArcadeData
 from api.external.badmaniac import BadManiac
 
 class OnboardingVPN(Resource):

@@ -4,8 +4,7 @@ from typing import Dict, Any
 
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
-from api.data.endpoints.session import SessionData, KeyData
-from api.data.endpoints.user import UserData
+from api.data.endpoints import SessionData, KeyData, UserData
 
 from api.external.mailjet import MailjetSMTP
 

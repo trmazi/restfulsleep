@@ -3,10 +3,7 @@ from flask_restful import Resource
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
-from api.data.endpoints.admin import AdminData
-from api.data.endpoints.user import UserData
-from api.data.endpoints.arcade import ArcadeData
-from api.data.endpoints.machine import MachineData
+from api.data.endpoints import AdminData, UserData, ArcadeData, MachineData
 from api.external.badmaniac import BadManiac
 
 class AdminDashboard(Resource):

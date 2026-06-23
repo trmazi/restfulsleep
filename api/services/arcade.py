@@ -4,10 +4,7 @@ from flask import Response, request
 from api.constants import APIConstants
 from api.precheck import RequestPreCheck
 from api.data.card import CardCipher
-from api.data.endpoints.arcade import ArcadeData
-from api.data.endpoints.machine import MachineData
-from api.data.endpoints.paseli import PaseliData
-from api.data.endpoints.user import UserData
+from api.data.endpoints import ArcadeData, MachineData, PaseliData, UserData
 from api.external.pfsense import PFSense
 
 class Arcade(Resource):

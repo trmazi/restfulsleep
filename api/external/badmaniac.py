@@ -2,8 +2,7 @@ import requests
 from io import BytesIO
 from typing import Dict, Any
 from api.constants import APIConstants, ValidatedDict
-from api.data.endpoints.arcade import ArcadeData
-from api.data.endpoints.machine import MachineData
+from api.data.endpoints import ArcadeData, MachineData
 from api.external.pfsense import PFSense
 
 class BadManiac:

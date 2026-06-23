@@ -1,9 +1,8 @@
 from flask_restful import Resource
 from flask import request
 from api.constants import APIConstants
-from api.precheck import RequestPreCheck, UserData
-from api.data.endpoints.music import MusicData
-from api.data.endpoints.score import ScoreData
+from api.precheck import RequestPreCheck
+from api.data.endpoints import MusicData, ScoreData
 
 class Records(Resource):
     def get(self, game: str):

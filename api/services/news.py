@@ -2,7 +2,7 @@ from flask_restful import Resource
 from api.precheck import RequestPreCheck
 from api.constants import APIConstants
 
-from api.data.endpoints.news import NewsData
+from api.data.endpoints import NewsData
 
 class getAllNews(Resource):
     def get(self):

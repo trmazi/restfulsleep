@@ -6,8 +6,7 @@ from flask_restful import Resource
 from flask import request
 
 from api.constants import APIConstants
-from api.data.endpoints.share import ShareData
-from api.data.endpoints.user import UserData
+from api.data.endpoints import ShareData, UserData
 from api.external.backblaze import BackBlazeCDN
 from api.external.badmaniac import BadManiac
 

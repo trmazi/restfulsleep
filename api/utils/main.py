@@ -9,7 +9,7 @@ import hashlib
 # External APIs
 from api.data.mysql import MySQLBase
 from api.data.cache import LocalCache
-from api.data.endpoints.session import SessionData
+from api.data.endpoints import SessionData
 from api.external.pfsense import PFSense
 from api.external.backblaze import BackBlazeCDN
 from api.external.mailjet import MailjetSMTP

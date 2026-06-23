@@ -3,12 +3,7 @@ from flask import request
 
 from api.constants import APIConstants, ValidatedDict
 from api.precheck import RequestPreCheck
-from api.data.endpoints.user import UserData
-from api.data.endpoints.profiles import ProfileData
-from api.data.endpoints.achievements import AchievementData
-from api.data.endpoints.game import GameData
-from api.data.endpoints.music import MusicData
-from api.data.endpoints.links import LinkData
+from api.data.endpoints import UserData, ProfileData, AchievementData, GameData, MusicData, LinkData
 
 class Profile(Resource):
     def get(self, game: str):

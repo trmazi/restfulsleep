@@ -1,8 +1,7 @@
 from flask import request
 from typing import Tuple
 from api.constants import APIConstants, ValidatedDict
-from api.data.endpoints.session import SessionData, TokenData
-from api.data.endpoints.user import UserData
+from api.data.endpoints import SessionData, TokenData, UserData
 from api.external.unity import UnityAPI
 
 class RequestPreCheck:

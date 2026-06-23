@@ -1,11 +1,8 @@
-from flask import make_response, request
 from flask_restful import Resource
-from typing import Dict, Any
 
 from api.constants import APIConstants, AppIntents
 from api.precheck import RequestPreCheck
-from api.data.endpoints.session import SessionData, KeyData, TokenData
-from api.data.endpoints.user import UserData
+from api.data.endpoints import SessionData, KeyData, TokenData, UserData
 
 from api.external.mailjet import MailjetSMTP
 from api.external.unity import UnityAPI
