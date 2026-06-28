@@ -37,8 +37,8 @@ class Profile(Resource):
         sessionUserId = session.get_int('id', -1)
 
         userPublic: ValidatedDict = UserData.public(userId)
-        if not userPublic and sessionUserId != userId:
-            if not UserData.admin(sessionUserId):
+        if not userPublic:
+            if sessionUserId is not userId and not UserData.admin(sessionUserId):
                 payload['stats']['arcade_history'] = []
 
         return {
