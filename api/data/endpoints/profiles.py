@@ -78,6 +78,8 @@ class ProfileData:
                     'block': rawData.get('block', None),
                     'packet': rawData.get('packet', None),
                     'skill_level': rawData.get('skill_level', None),
+                    'flare_single': rawData.get('flare_single', None),
+                    'flare_double': rawData.get('flare_double', None),
                     'jubility': (rawData.get('jubility', 0)) / 10,
                     'profile_skill': (rawData.get('profile_skill', 0)) / 100,
                     'skill': (rawData.get('skill', 0)) / 100,
