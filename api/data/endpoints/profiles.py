@@ -73,6 +73,7 @@ class ProfileData:
                     'userId': userId,
                     'maxVersion': maxVersion,
                     'username': rawData.get('username', rawData.get('name', '')),
+                    'chara': rawData.get('chara', None),
                     'sgrade': rawData.get('sgrade', None),
                     'dgrade': rawData.get('dgrade', None),
                     'block': rawData.get('block', None),
