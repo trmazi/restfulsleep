@@ -374,3 +374,77 @@ class ArcadeTakeover(Resource):
             return APIConstants.badEnd('Failed to transfer arcade.')
 
         return {'status': 'success'}
+    
+class ArcadeMachine(Resource):
+    def put(self, arcadeId: int):
+        '''
+        Create a new machine for an existing arcade, as an arcade owner.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get_int('id')
+        if not ArcadeData.checkOwnership(userId, arcadeId):
+            return APIConstants.badEnd('You don\'t own this arcade or it doesn\'t exist!')        
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedMachine = {
+            'name': data['name'],
+            'PCBID': data['PCBID'],
+            'port': None,
+            'ota': False,
+            'data': {
+                'cabinet': data['cabinet']
+            }
+        }
+        
+        machine = MachineData.putMachine(None, arcadeId, formattedMachine)
+        if not machine:
+            return APIConstants.badEnd('Failed to add machine')
+        
+        return {
+            'status': 'success'
+        }, 200
+    
+    def post(self, arcadeId: int):
+        '''
+        Update a machine for an existing arcade, as an arcade owner.
+        '''
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        userId = session.get_int('id')
+        if not ArcadeData.checkOwnership(userId, arcadeId):
+            return APIConstants.badEnd('You don\'t own this arcade or it doesn\'t exist!')
+        
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+        
+        formattedMachine = {
+            'name': data['name'],
+            'PCBID': data['PCBID'],
+            'port': None,
+            'ota': False,
+            'data': {
+                'cabinet': data['cabinet']
+            }
+        }
+
+        oldMachine = MachineData.fromPCBID(formattedMachine.get('PCBID'))
+        if not oldMachine:
+            return APIConstants.badEnd('PCBID not found.')
+        
+        machine = MachineData.putMachine(oldMachine.get_int('id'), arcadeId, formattedMachine)
+        if not machine:
+            return APIConstants.badEnd('Failed to add machine')
+        
+        return {
+            'status': 'success'
+        }, 200
+    

@@ -1,3 +1,4 @@
+import re
 from api.constants import ValidatedDict
 from api.data.json import JsonEncoded
 from api.data.mysql import MySQLBase
@@ -56,8 +57,16 @@ class MachineData:
         if 'name' not in newMachine or newMachine['name'] is None:
             raise ValueError("Machine 'name' is required and cannot be None")
         
-        if 'PCBID' not in newMachine or newMachine['PCBID'] is None:
+        PCBID = newMachine['PCBID']
+
+        if 'PCBID' not in newMachine or PCBID is None:
             raise ValueError("Machine 'PCBID' is required and cannot be None")
+        
+        pattern = r"^[0-9A-F]+$"
+        valid = bool(re.fullmatch(pattern, PCBID))
+        
+        if len(newMachine['PCBID']) is not 20 or not valid:
+            raise ValueError("Machine PCBID needs to be 20 characters and 0-9, A-F")
         
         port = newMachine.get('port')
         
