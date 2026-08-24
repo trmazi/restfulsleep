@@ -1,8 +1,9 @@
 import random
 from sqlalchemy import func
 from api.constants import ValidatedDict
+from api.data.data import BaseData
 from api.data.mysql import MySQLBase
-from api.data.types import User, Achievement, Arcade, Audit, Card, EditData, Link, Lobby, Machine, Profile, Score, Attempt, Client, News
+from api.data.types import User, Achievement, Arcade, Audit, Card, EditData, Link, Lobby, Machine, Profile, Score, Attempt, Client, News, GameUpdate
 from api.data.time import Time
 from api.data.json import JsonEncoded
 
@@ -147,6 +148,68 @@ class AdminData:
                     return False
                 
                 session.delete(news)
+                session.commit()
+                return True
+            except Exception as e:
+                session.rollback()
+                return False
+
+    def getAllUpdates() -> list[ValidatedDict]:
+        with MySQLBase.SessionLocal() as session:
+            updateQuery = session.query(GameUpdate)
+            updateQuery = updateQuery.order_by(GameUpdate.id.desc()).all()
+            return [
+                ValidatedDict({
+                    'id': update.id,
+                    'game': update.game,
+                    'mcode': update.mcode,
+                    'from_datecode': update.from_datecode,
+                    'to_datecode': update.to_datecode,
+                    'data': JsonEncoded.deserialize(update.data)
+                })
+                for update in updateQuery
+            ]
+        
+    def putUpdate(game: str, mcode: str, from_datecode: int, to_datecode: int, data: ValidatedDict, updateId: int = None) -> bool:
+        with MySQLBase.SessionLocal() as session:
+            try:
+                if updateId is not None:
+                    update = session.query(GameUpdate).filter_by(id=updateId).first()
+                    if not update:
+                        return False
+                else:
+                    update = GameUpdate()
+                    session.add(news)
+
+                update.game = game
+                update.mcode = mcode
+                update.from_datecode = from_datecode
+                update.to_datecode = to_datecode
+
+                if updateId is not None:
+                    rawData = JsonEncoded.deserialize(update.data)
+                    error_code = BaseData.update_data(rawData, data)
+                    if error_code:
+                        return error_code
+                else:
+                    rawData = data
+                update.data = JsonEncoded.serialize(rawData)
+                
+                session.commit()
+                return True
+
+            except Exception as e:
+                session.rollback()
+                return False
+            
+    def deleteUpdate(updateId: int):
+        with MySQLBase.SessionLocal() as session:
+            try:
+                update = session.query(GameUpdate).filter_by(id=updateId).first()
+                if update is None:
+                    return False
+                
+                session.delete(update)
                 session.commit()
                 return True
             except Exception as e:

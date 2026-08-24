@@ -672,4 +672,195 @@ class AdminNewsPost(Resource):
             return APIConstants.badEnd('Failed to delete news!')
         
         return {'status': 'success'}
+
+class AdminUpdates(Resource):
+    def get(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+        
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+        
+        updates = AdminData.getAllUpdates()
+        return {'status': 'success', 'data': updates}
     
+    def post(self):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+
+        game = data.get_str('game', None)
+        if not game:
+            return APIConstants.badEnd('No game provided!')
+
+        mcode = data.get_str('mcode', None)
+        if not mcode:
+            return APIConstants.badEnd('No mcode provided!')
+
+        if len(mcode) != 3:
+            return APIConstants.badEnd('MCODE must be 3 characters!')
+
+        mcode = mcode.upper()
+
+        fromDatecode = data.get_str('fromDatecode', None)
+        if not fromDatecode:
+            return APIConstants.badEnd('No fromDatecode provided!')
+        if not str(fromDatecode).isdigit() or len(str(fromDatecode)) != 10:
+            return APIConstants.badEnd('fromDatecode must be 10 digits!')
+        fromDatecode = int(fromDatecode)
+
+        toDatecode = data.get_str('toDatecode', None)
+        if not toDatecode:
+            return APIConstants.badEnd('No toDatecode provided!')
+        if not str(toDatecode).isdigit() or len(str(toDatecode)) != 10:
+            return APIConstants.badEnd('toDatecode must be 10 digits!')
+        toDatecode = int(toDatecode)
+
+        url = data.get_str('url', None)
+        if not url:
+            return APIConstants.badEnd('No url provided!')
+
+        filename = data.get_str('filename', None)
+        if not filename:
+            return APIConstants.badEnd('No filename provided!')
+
+        md5 = data.get_str('md5', None)
+        if not md5:
+            return APIConstants.badEnd('No md5 provided!')
+
+        size = data.get_str('size', None)
+        if not size:
+            return APIConstants.badEnd('No size provided!')
+        if not str(size).isdigit():
+            return APIConstants.badEnd('size must be an integer!')
+        size = int(size)
+
+        if not AdminData.putUpdate(
+            game,
+            mcode,
+            fromDatecode,
+            toDatecode,
+            {
+                "url": url,
+                "filename": filename,
+                "md5": md5,
+                "size": size
+            }
+        ):
+            return APIConstants.badEnd('Failed to put news!')
+        
+        news = AdminData.getAllNews()
+        return {'status': 'success', 'data': news}
+    
+class AdminUpdate(Resource):
+    def post(self, updateId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+
+        dataState, data = RequestPreCheck.checkData()
+        if not dataState:
+            return data
+
+        game = data.get_str('game', None)
+        if not game:
+            return APIConstants.badEnd('No game provided!')
+
+        mcode = data.get_str('mcode', None)
+        if not mcode:
+            return APIConstants.badEnd('No mcode provided!')
+
+        if len(mcode) != 3:
+            return APIConstants.badEnd('MCODE must be 3 characters!')
+
+        mcode = mcode.upper()
+
+        fromDatecode = data.get_str('fromDatecode', None)
+        if not fromDatecode:
+            return APIConstants.badEnd('No fromDatecode provided!')
+
+        if not str(fromDatecode).isdigit() or len(str(fromDatecode)) != 10:
+            return APIConstants.badEnd('fromDatecode must be 10 digits!')
+
+        fromDatecode = int(fromDatecode)
+
+        toDatecode = data.get_str('toDatecode', None)
+        if not toDatecode:
+            return APIConstants.badEnd('No toDatecode provided!')
+
+        if not str(toDatecode).isdigit() or len(str(toDatecode)) != 10:
+            return APIConstants.badEnd('toDatecode must be 10 digits!')
+
+        toDatecode = int(toDatecode)
+
+        url = data.get_str('url', None)
+        if not url:
+            return APIConstants.badEnd('No url provided!')
+
+        filename = data.get_str('filename', None)
+        if not filename:
+            return APIConstants.badEnd('No filename provided!')
+
+        md5 = data.get_str('md5', None)
+        if not md5:
+            return APIConstants.badEnd('No md5 provided!')
+
+        size = data.get_str('size', None)
+        if not size:
+            return APIConstants.badEnd('No size provided!')
+
+        if not str(size).isdigit():
+            return APIConstants.badEnd('size must be an integer!')
+
+        size = int(size)
+
+        updateData = {
+            'url': url,
+            'filename': filename,
+            'md5': md5,
+            'size': size
+        }
+
+        if not AdminData.putUpdate(
+            game,
+            mcode,
+            fromDatecode,
+            toDatecode,
+            updateData,
+            updateId
+        ):
+            return APIConstants.badEnd('Failed to put update!')
+
+        return {
+            'status': 'success'
+        }
+
+    def delete(self, updateId: int):
+        sessionState, session = RequestPreCheck.getSession()
+        if not sessionState:
+            return session
+
+        adminState, errorCode = RequestPreCheck.checkAdmin(session)
+        if not adminState:
+            return errorCode
+
+        if not AdminData.deleteUpdate(updateId):
+            return APIConstants.badEnd('Failed to delete update!')
+
+        return {
+            'status': 'success'
+        }

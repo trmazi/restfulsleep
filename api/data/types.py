@@ -86,7 +86,7 @@ class GameSettings(Base):
     userid = Column(Integer, primary_key=True)
     data = Column(LargeBinary)
 
-class GameUpdates(Base):
+class GameUpdate(Base):
     __tablename__ = 'game_updates'
     id = Column(Integer, primary_key=True)
     game = Column(String(255))
